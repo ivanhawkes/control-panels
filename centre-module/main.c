@@ -31,11 +31,14 @@ const uint Button1 = 0;
 const uint Button2 = 1;
 const uint Button3 = 2;
 const uint Button4 = 3;
-const uint LED1 = 4;
-const uint LED2 = 5;
-const uint LED3 = 6;
 
-const uint GPIO15 = 15;
+const uint LED1 = 6;
+const uint LED2 = 7;
+const uint LED3 = 8;
+const uint LED4 = 9;
+
+// Indicate we have power. It's a handy diagnostic that shows the code is running.
+const uint POWER_LED = 15;
 
 //--------------------------------------------------------------------+
 // Device callbacks
@@ -278,13 +281,14 @@ void ButtonTask(void)
 	bool value1 = gpio_get(Button1);
 	bool value2 = gpio_get(Button2);
 	bool value3 = gpio_get(Button3);
-	//bool value4 = gpio_get(Button4);
+	bool value4 = gpio_get(Button4);
 	
 	value1 ? gpio_put(LED1, false) : gpio_put(LED1, true);
 	value2 ? gpio_put(LED2, false) : gpio_put(LED2, true);
 	value3 ? gpio_put(LED3, false) : gpio_put(LED3, true);
+	value4 ? gpio_put(LED4, false) : gpio_put(LED4, true);
 
-	gpio_put(GPIO15, true);
+	gpio_put(POWER_LED, true);
 }
 
 
@@ -304,8 +308,6 @@ void LEDBlinkingTask(void)
 
 	board_led_write(ledState);
 	ledState = 1 - ledState; // toggle
-
-	gpio_put(GPIO15, true);
 }
 
 
@@ -317,7 +319,7 @@ int main(void)
 	// Init the USB / UART IO.
 	stdio_init_all();
 
-	gpio_init(Button1);
+	gpio_init(Button1);                                      
     gpio_set_dir(Button1, GPIO_IN);
 	gpio_init(Button2);
     gpio_set_dir(Button2, GPIO_IN);
@@ -328,19 +330,18 @@ int main(void)
 	
 	gpio_init(LED1);
     gpio_set_dir(LED1, GPIO_OUT);
-	gpio_put(LED1, true);
 
 	gpio_init(LED2);
     gpio_set_dir(LED2, GPIO_OUT);
-	gpio_put(LED2, true);
 
 	gpio_init(LED3);
     gpio_set_dir(LED3, GPIO_OUT);
-	gpio_put(LED3, true);
 
-	gpio_init(GPIO15);
-    gpio_set_dir(GPIO15, GPIO_OUT);
-	gpio_put(GPIO15, true);
+	gpio_init(LED4);
+    gpio_set_dir(LED4, GPIO_OUT);
+
+	gpio_init(POWER_LED);
+    gpio_set_dir(POWER_LED, GPIO_OUT);
 
 	while (1)
 	{
