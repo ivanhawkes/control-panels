@@ -17,5 +17,9 @@ target_link_libraries(centre_module PUBLIC pico_stdlib tinyusb_device tinyusb_bo
 
 pico_add_extra_outputs(centre_module)
 
+# Enable USB output, disable UART output.
+#pico_enable_stdio_usb(centre_module 1)
+#pico_enable_stdio_uart(centre_module 0)
+
 # add url via pico_set_program_url
 #example_auto_set_url(centre_module)

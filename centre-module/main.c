@@ -4,8 +4,9 @@
 
 #include "bsp/board.h"
 #include "tusb.h"
-
 #include "usb_descriptors.h"
+
+#include "pico/stdlib.h"
 
 //--------------------------------------------------------------------+
 // MACRO CONSTANT TYPEDEF PROTYPES
@@ -23,27 +24,18 @@ enum
 	BLINK_SUSPENDED = 2500,
 };
 
-static uint32_t blink_interval_ms = BLINK_NOT_MOUNTED;
+uint32_t blinkIntervalMS = BLINK_NOT_MOUNTED;
+const uint32_t checkIntervalMS = 1;
 
-void led_blinking_task(void);
-void hid_task(void);
+const uint Button1 = 0;
+const uint Button2 = 1;
+const uint Button3 = 2;
+const uint Button4 = 3;
+const uint LED1 = 4;
+const uint LED2 = 5;
+const uint LED3 = 6;
 
-
-int main(void)
-{
-	board_init();
-	tusb_init();
-
-	while (1)
-	{
-		tud_task(); // tinyusb device task
-		led_blinking_task();
-
-		hid_task();
-	}
-
-	return 0;
-}
+const uint GPIO15 = 15;
 
 //--------------------------------------------------------------------+
 // Device callbacks
@@ -53,14 +45,14 @@ int main(void)
 
 void tud_mount_cb(void)
 {
-	blink_interval_ms = BLINK_MOUNTED;
+	blinkIntervalMS = BLINK_MOUNTED;
 }
 
 // Invoked when device is unmounted
 
 void tud_umount_cb(void)
 {
-	blink_interval_ms = BLINK_NOT_MOUNTED;
+	blinkIntervalMS = BLINK_NOT_MOUNTED;
 }
 
 // Invoked when usb bus is suspended
@@ -70,19 +62,19 @@ void tud_umount_cb(void)
 void tud_suspend_cb(bool remote_wakeup_en)
 {
 	(void)remote_wakeup_en;
-	blink_interval_ms = BLINK_SUSPENDED;
+	blinkIntervalMS = BLINK_SUSPENDED;
 }
 
 // Invoked when usb bus is resumed
 
 void tud_resume_cb(void)
 {
-	blink_interval_ms = BLINK_MOUNTED;
+	blinkIntervalMS = BLINK_MOUNTED;
 }
 
-//--------------------------------------------------------------------+
+//
 // USB HID
-//--------------------------------------------------------------------+
+//
 
 static void send_hid_report(uint8_t report_id, uint32_t btn)
 {
@@ -184,10 +176,10 @@ void hid_task(void)
 {
 	// Poll every 10ms
 	const uint32_t interval_ms = 10;
-	static uint32_t start_ms = 0;
+	static uint32_t startMS = 0;
 
-	if (board_millis() - start_ms < interval_ms) return; // not enough time
-	start_ms += interval_ms;
+	if (board_millis() - startMS < interval_ms) return; // not enough time
+	startMS += interval_ms;
 
 	uint32_t const btn = board_button_read();
 
@@ -258,37 +250,112 @@ void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_
 			if (kbd_leds & KEYBOARD_LED_CAPSLOCK)
 			{
 				// Capslock On: disable blink, turn led on
-				blink_interval_ms = 0;
+				blinkIntervalMS = 0;
 				board_led_write(true);
 			}
 			else
 			{
 				// Caplocks Off: back to normal blink
 				board_led_write(false);
-				blink_interval_ms = BLINK_MOUNTED;
+				blinkIntervalMS = BLINK_MOUNTED;
 			}
 		}
 	}
 }
 
-//--------------------------------------------------------------------+
-// BLINKING TASK
-//--------------------------------------------------------------------+
 
-void led_blinking_task(void)
+void ButtonTask(void)
 {
-	static uint32_t start_ms = 0;
-	static bool led_state = false;
+	static uint32_t startMS = 0;
 
-	// blink is disabled
-	if (!blink_interval_ms) return;
-
-	// Blink every interval ms
-	if (board_millis() - start_ms < blink_interval_ms)
+	// Shortcut.
+	if (board_millis() - startMS < checkIntervalMS)
 		return;
 
-	start_ms += blink_interval_ms;
+	printf("Tick\n");
+	startMS += checkIntervalMS;
+	
+	bool value1 = gpio_get(Button1);
+	bool value2 = gpio_get(Button2);
+	bool value3 = gpio_get(Button3);
+	//bool value4 = gpio_get(Button4);
+	
+	value1 ? gpio_put(LED1, false) : gpio_put(LED1, true);
+	value2 ? gpio_put(LED2, false) : gpio_put(LED2, true);
+	value3 ? gpio_put(LED3, false) : gpio_put(LED3, true);
 
-	board_led_write(led_state);
-	led_state = 1 - led_state; // toggle
+	gpio_put(GPIO15, true);
+}
+
+
+void LEDBlinkingTask(void)
+{
+	static uint32_t startMS = 0;
+	static bool ledState = false;
+
+	// blink is disabled
+	if (!blinkIntervalMS) return;
+
+	// Blink every interval ms
+	if (board_millis() - startMS < blinkIntervalMS)
+		return;
+
+	startMS += blinkIntervalMS;
+
+	board_led_write(ledState);
+	ledState = 1 - ledState; // toggle
+
+	gpio_put(GPIO15, true);
+}
+
+
+int main(void)
+{
+	board_init();
+	tusb_init();
+	
+	// Init the USB / UART IO.
+	stdio_init_all();
+
+	gpio_init(Button1);
+    gpio_set_dir(Button1, GPIO_IN);
+	gpio_init(Button2);
+    gpio_set_dir(Button2, GPIO_IN);
+	gpio_init(Button3);
+    gpio_set_dir(Button3, GPIO_IN);
+	gpio_init(Button4);
+    gpio_set_dir(Button4, GPIO_IN);
+	
+	gpio_init(LED1);
+    gpio_set_dir(LED1, GPIO_OUT);
+	gpio_put(LED1, true);
+
+	gpio_init(LED2);
+    gpio_set_dir(LED2, GPIO_OUT);
+	gpio_put(LED2, true);
+
+	gpio_init(LED3);
+    gpio_set_dir(LED3, GPIO_OUT);
+	gpio_put(LED3, true);
+
+	gpio_init(GPIO15);
+    gpio_set_dir(GPIO15, GPIO_OUT);
+	gpio_put(GPIO15, true);
+
+	while (1)
+	{
+		// TinyUSB device task.
+		tud_task();
+
+		// Blinky blink.
+		LEDBlinkingTask();
+
+		// Check all our buttons.
+		ButtonTask();
+		
+		// Keep them informed about HID changes.
+		hid_task();
+	}
+
+	return 0;
 }
