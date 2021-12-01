@@ -27,10 +27,10 @@ enum
 uint32_t blinkIntervalMS = BLINK_NOT_MOUNTED;
 const uint32_t checkIntervalMS = 1;
 
-const uint Button1 = 0;
-const uint Button2 = 1;
-const uint Button3 = 2;
-const uint Button4 = 3;
+const uint button1 = 0;
+const uint button2 = 1;
+const uint button3 = 2;
+const uint button4 = 3;
 
 const uint LED1 = 6;
 const uint LED2 = 7;
@@ -39,6 +39,13 @@ const uint LED4 = 9;
 
 // Indicate we have power. It's a handy diagnostic that shows the code is running.
 const uint POWER_LED = 15;
+
+uint8_t keyPressed = HID_KEY_NONE;
+const uint8_t keyPressed1 = HID_KEY_PAGE_UP;
+const uint8_t keyPressed2 = HID_KEY_PAGE_DOWN;
+const uint8_t keyPressed3 = HID_KEY_ARROW_LEFT;
+const uint8_t keyPressed4 = HID_KEY_ARROW_RIGHT;
+
 
 //--------------------------------------------------------------------+
 // Device callbacks
@@ -94,7 +101,7 @@ static void send_hid_report(uint8_t report_id, uint32_t btn)
 			if (btn)
 			{
 				uint8_t keycode[6] = {0};
-				keycode[0] = HID_KEY_A;
+				keycode[0] = keyPressed;
 
 				tud_hid_keyboard_report(REPORT_ID_KEYBOARD, 0, keycode);
 				has_keyboard_key = true;
@@ -178,13 +185,14 @@ static void send_hid_report(uint8_t report_id, uint32_t btn)
 void hid_task(void)
 {
 	// Poll every 10ms
-	const uint32_t interval_ms = 10;
+	const uint32_t interval_ms = 5;
 	static uint32_t startMS = 0;
 
 	if (board_millis() - startMS < interval_ms) return; // not enough time
 	startMS += interval_ms;
 
-	uint32_t const btn = board_button_read();
+//	uint32_t const btn = board_button_read();
+	uint32_t const btn = (keyPressed != HID_KEY_NONE);
 
 	// Remote wakeup
 	if (tud_suspended() && btn)
@@ -278,15 +286,52 @@ void ButtonTask(void)
 	printf("Tick\n");
 	startMS += checkIntervalMS;
 	
-	bool value1 = gpio_get(Button1);
-	bool value2 = gpio_get(Button2);
-	bool value3 = gpio_get(Button3);
-	bool value4 = gpio_get(Button4);
+	bool value1 = gpio_get(button1);
+	bool value2 = gpio_get(button2);
+	bool value3 = gpio_get(button3);
+	bool value4 = gpio_get(button4);
 	
-	value1 ? gpio_put(LED1, false) : gpio_put(LED1, true);
-	value2 ? gpio_put(LED2, false) : gpio_put(LED2, true);
-	value3 ? gpio_put(LED3, false) : gpio_put(LED3, true);
-	value4 ? gpio_put(LED4, false) : gpio_put(LED4, true);
+	keyPressed = HID_KEY_NONE;
+
+	if (value1)
+	{
+		gpio_put(LED1, false);
+	}
+	else
+	{
+		keyPressed = keyPressed1;
+		gpio_put(LED1, true);
+	}
+
+	if (value2)
+	{
+		gpio_put(LED2, false);
+	}
+	else
+	{
+		keyPressed = keyPressed2;
+		gpio_put(LED2, true);
+	}
+
+	if (value3)
+	{
+		gpio_put(LED3, false);
+	}
+	else
+	{
+		keyPressed = keyPressed3;
+		gpio_put(LED3, true);
+	}
+
+	if (value4)
+	{
+		gpio_put(LED4, false);
+	}
+	else
+	{
+		keyPressed = keyPressed4;
+		gpio_put(LED4, true);
+	}
 
 	gpio_put(POWER_LED, true);
 }
@@ -319,14 +364,14 @@ int main(void)
 	// Init the USB / UART IO.
 	stdio_init_all();
 
-	gpio_init(Button1);                                      
-    gpio_set_dir(Button1, GPIO_IN);
-	gpio_init(Button2);
-    gpio_set_dir(Button2, GPIO_IN);
-	gpio_init(Button3);
-    gpio_set_dir(Button3, GPIO_IN);
-	gpio_init(Button4);
-    gpio_set_dir(Button4, GPIO_IN);
+	gpio_init(button1);                                      
+    gpio_set_dir(button1, GPIO_IN);
+	gpio_init(button2);
+    gpio_set_dir(button2, GPIO_IN);
+	gpio_init(button3);
+    gpio_set_dir(button3, GPIO_IN);
+	gpio_init(button4);
+    gpio_set_dir(button4, GPIO_IN);
 	
 	gpio_init(LED1);
     gpio_set_dir(LED1, GPIO_OUT);
