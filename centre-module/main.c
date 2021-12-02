@@ -7,6 +7,8 @@
 #include "usb_descriptors.h"
 
 #include "pico/stdlib.h"
+//#include "pico/time.h"
+
 
 // Blink pattern times.
 enum
@@ -16,37 +18,44 @@ enum
 	blinkIntervalSuspended = 2500,
 };
 
+//static absolute_time_t lastTaskTime;
+
 uint32_t blinkIntervalMS = blinkIntervalNotMounted;
-const uint32_t checkIntervalMS = 5;
 
-const size_t buttonCount = 4;
+// Control how quickly it tries to update.
+const uint32_t checkIntervalMS = 20;
 
-struct Button
+const size_t switchCount = 4;
+
+struct DigitalSwitch
 {
-	uint32_t buttonId;
+	// The GPIO pin number which the switch is connected to.
+	uint32_t switchId;
+	
+	// If there is an LED associated with this switch it will have a GPIO pin number here.
 	uint ledID;
+	
+	// The key code we will send when activating this switch?
 	uint8_t mappedKey;
+	
+	// Friendly name for the switch.
+	char mappedKeyName[25];
+	
+	// Is the switch currently depressed?
 	bool isPressed;
-	uint32_t timeDepressed;
+	
+	// Track the number of microseconds the switch has been in it's current state.
+	absolute_time_t durationCurrentStateInUS;
 };
 
-struct Button buttonArray[] = 
+
+struct DigitalSwitch switchArray[] = 
 {
-    {2, 6, HID_KEY_PAGE_UP, false, 0},
-    {3, 7, HID_KEY_PAGE_DOWN, false, 0},
-    {4, 8, HID_KEY_ARROW_LEFT, false, 0},
-    {5, 9, HID_KEY_ARROW_RIGHT, false, 0}
+    {2, 6, HID_KEY_PAGE_UP, "PageUp", false},
+    {3, 7, HID_KEY_PAGE_DOWN, "PageDown", false},
+    {4, 8, HID_KEY_ARROW_LEFT, "ArrowLeft", false},
+    {5, 9, HID_KEY_ARROW_RIGHT, "ArrowRight", false}
 };
-
-const uint button1 = 0;
-const uint button2 = 1;
-const uint button3 = 2;
-const uint button4 = 3;
-
-const uint LED1 = 6;
-const uint LED2 = 7;
-const uint LED3 = 8;
-const uint LED4 = 9;
 
 // Indicate we have power. It's a handy diagnostic that shows the code is running.
 const uint POWER_LED = 15;
@@ -159,8 +168,14 @@ static void send_hid_report(uint8_t report_id, bool isKeyPressed)
 
 			hid_gamepad_report_t report =
 			{
-				.x = 0, .y = 0, .z = 0, .rz = 0, .rx = 0, .ry = 0,
-				.hat = 0, .buttons = 0
+				.x = 0,
+				.y = 0,
+				.z = 0,
+				.rz = 0,
+				.rx = 0,
+				.ry = 0,
+				.hat = 0,
+				.buttons = 0
 			};
 
 			if (isKeyPressed)
@@ -185,35 +200,6 @@ static void send_hid_report(uint8_t report_id, bool isKeyPressed)
 	}
 }
 
-// Every 10ms, we will sent 1 report for each HID profile (keyboard, mouse etc ..)
-// tud_hid_report_complete_cb() is used to send the next report after previous one is complete
-
-void hid_task(void)
-{
-	static uint32_t elapsedMS = 0;
-
-	// Early out.
-	if (board_millis() - elapsedMS < checkIntervalMS)
-		return;
-	elapsedMS += checkIntervalMS;
-
-	bool const isKeyPressed = (keyPressed != HID_KEY_NONE);
-	gpio_put(POWER_LED, isKeyPressed);
-
-	// Remote wakeup
-	if (tud_suspended() && isKeyPressed)
-	{
-		// Wake up host if we are in suspend mode
-		// and REMOTE_WAKEUP feature is enabled by host
-		tud_remote_wakeup();
-	}
-	else
-	{
-		// Send the 1st of report chain, the rest will be sent by tud_hid_report_complete_cb()
-		send_hid_report(REPORT_ID_KEYBOARD, isKeyPressed);
-	}
-}
-
 // Invoked when sent REPORT successfully to host
 // Application can use this to send the next report
 // Note: For composite reports, report[0] is report ID
@@ -223,11 +209,13 @@ void tud_hid_report_complete_cb(uint8_t instance, uint8_t const* report, uint8_t
 	(void)instance;
 	(void)len;
 
+	bool const isKeyPressed = (keyPressed != HID_KEY_NONE);
+
 	uint8_t next_report_id = report[0] + 1;
 
 	if (next_report_id < REPORT_ID_COUNT)
 	{
-		send_hid_report(next_report_id, board_button_read());
+		send_hid_report(next_report_id, isKeyPressed);
 	}
 }
 
@@ -281,33 +269,76 @@ void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_
 }
 
 
-void ButtonTask(void)
-{
-	static uint32_t elapsedMS = 0;
+// Every x ms, we will sent 1 report for each HID profile (keyboard, mouse etc ..)
+// tud_hid_report_complete_cb() is used to send the next report after previous one is completed.
 
-	// Shortcut.
+void hid_task(void)
+{
+	// Early out.
+	static uint32_t elapsedMS = 0;
 	if (board_millis() - elapsedMS < checkIntervalMS)
 		return;
+	elapsedMS += checkIntervalMS;
 
-	printf("Tick\n");
+	bool const isKeyPressed = (keyPressed != HID_KEY_NONE);
+	gpio_put(POWER_LED, isKeyPressed);
+
+	// Remote wakeup
+	if (tud_suspended() && isKeyPressed)
+	{
+		// Wake up host if we are in suspend mode and REMOTE_WAKEUP feature is enabled by host.
+		tud_remote_wakeup();
+	}
+	else
+	{
+		// Send the 1st of report chain, the rest will be sent by tud_hid_report_complete_cb()
+		send_hid_report(REPORT_ID_KEYBOARD, isKeyPressed);
+	}
+}
+
+
+void SwitchTast(void)
+{
+	//const absolute_time_t currentTime = get_absolute_time();
+	//const int64_t timeDifference = absolute_time_diff_us(currentTime, lastTaskTime);
+
+	// Early out.
+	// TODO: Use the US timing ability to get much tighter timing information.
+	static uint32_t elapsedMS = 0;
+	if (board_millis() - elapsedMS < checkIntervalMS)
+		return;
 	elapsedMS += checkIntervalMS;
 	
+	// Default is for nothing to happen.
 	keyPressed = HID_KEY_NONE;
 
 	// Detect their state.
-	for (size_t i = 0; i < buttonCount; i++)
+	for (size_t i = 0; i < switchCount; i++)
 	{
 		// Get their pressed state.
-		buttonArray[i].isPressed = gpio_get(buttonArray[i].buttonId);
-
-		if (buttonArray[i].isPressed)
+		const bool newSwitchState = gpio_get(switchArray[i].switchId);
+		if (switchArray[i].isPressed != newSwitchState)
 		{
-			gpio_put(buttonArray[i].ledID, false);
+			// State change - make something happen.
+			switchArray[i].durationCurrentStateInUS = nil_time;
+			switchArray[i].isPressed = newSwitchState;
+
+			if (newSwitchState)
+			{
+				gpio_put(switchArray[i].ledID, false);
+			}
+			else
+			{
+				keyPressed = switchArray[i].mappedKey;
+				gpio_put(switchArray[i].ledID, true);
+			}
 		}
 		else
 		{
-			keyPressed = buttonArray[i].mappedKey;
-			gpio_put(buttonArray[i].ledID, true);
+			// Same state as last run, make something less exciting happen.
+
+			// Update the duration the switch has been in this state.
+			//switchArray[i].durationCurrentStateInUS = delayed_by_us(switchArray[i].durationCurrentStateInUS, timeDifference);
 		}
 	}
 }
@@ -339,16 +370,19 @@ int main(void)
 	// Init the USB / UART IO.
 	stdio_init_all();
 
-	// Initialise all the buttons.
-	for (size_t i = 0; i < buttonCount; i++)
+	// We'll track the time from startup.
+	//lastTaskTime = get_absolute_time();
+
+	// Initialise all the switches.
+	for (size_t i = 0; i < switchCount; i++)
 	{
-		// Initialise the button pins for input.
-		gpio_init(buttonArray[i].buttonId);
-		gpio_set_dir(buttonArray[i].buttonId, GPIO_IN);
+		// Initialise the switch pins for input.
+		gpio_init(switchArray[i].switchId);
+		gpio_set_dir(switchArray[i].switchId, GPIO_IN);
 
 		// Initialise the LED pins for output.
-		gpio_init(buttonArray[i].ledID);
-		gpio_set_dir(buttonArray[i].ledID, GPIO_OUT);
+		gpio_init(switchArray[i].ledID);
+		gpio_set_dir(switchArray[i].ledID, GPIO_OUT);
 	}
 
 	// Give ourselves a power LED indicator for debugging.
@@ -364,11 +398,14 @@ int main(void)
 		// Blinky blink.
 		LEDBlinkingTask();
 
-		// Check all our buttons.
-		ButtonTask();
+		// Check all our switches.
+		SwitchTast();
 		
 		// Keep them informed about HID changes.
 		hid_task();
+
+		// Track time.
+		//lastTaskTime = get_absolute_time();
 	}
 
 	return 0;
