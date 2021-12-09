@@ -7,7 +7,7 @@
 #include "usb_descriptors.h"
 
 #include "pico/stdlib.h"
-//#include "pico/time.h"
+#include "pico/time.h"
 
 
 // Blink pattern times.
@@ -18,12 +18,9 @@ enum
 	blinkIntervalSuspended = 2500,
 };
 
-//static absolute_time_t lastTaskTime;
+uint32_t lastTaskTime;
 
 uint32_t blinkIntervalMS = blinkIntervalNotMounted;
-
-// Control how quickly it tries to update.
-const uint32_t checkIntervalMS = 20;
 
 const size_t switchCount = 4;
 
@@ -45,7 +42,7 @@ struct DigitalSwitch
 	bool isPressed;
 	
 	// Track the number of microseconds the switch has been in it's current state.
-	absolute_time_t durationCurrentStateInUS;
+	uint32_t timeStateWasEntered;
 };
 
 
@@ -274,12 +271,6 @@ void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_
 
 void hid_task(void)
 {
-	// Early out.
-	static uint32_t elapsedMS = 0;
-	if (board_millis() - elapsedMS < checkIntervalMS)
-		return;
-	elapsedMS += checkIntervalMS;
-
 	bool const isKeyPressed = (keyPressed != HID_KEY_NONE);
 	gpio_put(POWER_LED, isKeyPressed);
 
@@ -297,18 +288,10 @@ void hid_task(void)
 }
 
 
-void SwitchTast(void)
+void SwitchTask()
 {
-	//const absolute_time_t currentTime = get_absolute_time();
-	//const int64_t timeDifference = absolute_time_diff_us(currentTime, lastTaskTime);
+	uint32_t currentTime = time_us_32();
 
-	// Early out.
-	// TODO: Use the US timing ability to get much tighter timing information.
-	static uint32_t elapsedMS = 0;
-	if (board_millis() - elapsedMS < checkIntervalMS)
-		return;
-	elapsedMS += checkIntervalMS;
-	
 	// Default is for nothing to happen.
 	keyPressed = HID_KEY_NONE;
 
@@ -316,29 +299,42 @@ void SwitchTast(void)
 	for (size_t i = 0; i < switchCount; i++)
 	{
 		// Get their pressed state.
-		const bool newSwitchState = gpio_get(switchArray[i].switchId);
-		if (switchArray[i].isPressed != newSwitchState)
-		{
-			// State change - make something happen.
-			switchArray[i].durationCurrentStateInUS = nil_time;
-			switchArray[i].isPressed = newSwitchState;
+		const bool currentSwitchState = gpio_get(switchArray[i].switchId);
 
-			if (newSwitchState)
+		// State change - make something happen.
+		if (switchArray[i].isPressed != currentSwitchState)
+		{
+			uint32_t timeInThisState = currentTime - switchArray[i].timeStateWasEntered;
+
+			// DEBUG: Testing the time difference on loops.
+			printf("\nLT: %u, CT: %u, TSE: %u, TiS: %u, ",
+				lastTaskTime,
+				currentTime,
+				switchArray[i].timeStateWasEntered,
+				timeInThisState);
+
+			if (currentSwitchState)
 			{
 				gpio_put(switchArray[i].ledID, false);
+				printf("%s\n", switchArray[i].mappedKeyName);
 			}
 			else
 			{
 				keyPressed = switchArray[i].mappedKey;
 				gpio_put(switchArray[i].ledID, true);
+				printf("%s\n", switchArray[i].mappedKeyName);
 			}
+
+			// Entering a new state, reset the time now.
+			switchArray[i].timeStateWasEntered = currentTime;
+			switchArray[i].isPressed = currentSwitchState;
 		}
 		else
 		{
 			// Same state as last run, make something less exciting happen.
 
-			// Update the duration the switch has been in this state.
-			//switchArray[i].durationCurrentStateInUS = delayed_by_us(switchArray[i].durationCurrentStateInUS, timeDifference);
+			// DEBUG: Testing the time difference on loops.
+			// printf(".");
 		}
 	}
 }
@@ -357,6 +353,7 @@ void LEDBlinkingTask(void)
 		return;
 	elapsedMS += blinkIntervalMS;
 
+	//printf(".");
 	board_led_write(ledState);
 	ledState = 1 - ledState; // toggle
 }
@@ -364,14 +361,15 @@ void LEDBlinkingTask(void)
 
 int main(void)
 {
+	// Init the USB / UART IO.
+	stdio_init_all();
 	board_init();
 	tusb_init();
 	
-	// Init the USB / UART IO.
-	stdio_init_all();
+	printf("Centre console online.\n");
 
 	// We'll track the time from startup.
-	//lastTaskTime = get_absolute_time();
+	lastTaskTime = time_us_32();
 
 	// Initialise all the switches.
 	for (size_t i = 0; i < switchCount; i++)
@@ -383,6 +381,10 @@ int main(void)
 		// Initialise the LED pins for output.
 		gpio_init(switchArray[i].ledID);
 		gpio_set_dir(switchArray[i].ledID, GPIO_OUT);
+
+		// Give everything else sensible defaults.
+		switchArray[i].timeStateWasEntered = lastTaskTime;
+		switchArray[i].isPressed = false;
 	}
 
 	// Give ourselves a power LED indicator for debugging.
@@ -399,13 +401,13 @@ int main(void)
 		LEDBlinkingTask();
 
 		// Check all our switches.
-		SwitchTast();
+		SwitchTask();
 		
 		// Keep them informed about HID changes.
 		hid_task();
 
 		// Track time.
-		//lastTaskTime = get_absolute_time();
+		lastTaskTime = time_us_32();
 	}
 
 	return 0;
