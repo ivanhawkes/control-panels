@@ -9,6 +9,8 @@
 #include "pico/stdlib.h"
 #include "pico/time.h"
 
+#include "digital_switch.h"
+
 
 // Blink pattern times.
 enum
@@ -22,40 +24,8 @@ uint32_t lastTaskTime;
 
 uint32_t blinkIntervalMS = blinkIntervalNotMounted;
 
-const size_t switchCount = 4;
-
-struct DigitalSwitch
-{
-	// The GPIO pin number which the switch is connected to.
-	uint32_t switchId;
-	
-	// If there is an LED associated with this switch it will have a GPIO pin number here.
-	uint ledID;
-	
-	// The key code we will send when activating this switch?
-	uint8_t mappedKey;
-	
-	// Friendly name for the switch.
-	char mappedKeyName[25];
-	
-	// Is the switch currently depressed?
-	bool isPressed;
-	
-	// Track the number of microseconds the switch has been in it's current state.
-	uint32_t timeStateWasEntered;
-};
-
-
-struct DigitalSwitch switchArray[] = 
-{
-    {2, 6, HID_KEY_PAGE_UP, "PageUp", false},
-    {3, 7, HID_KEY_PAGE_DOWN, "PageDown", false},
-    {4, 8, HID_KEY_ARROW_LEFT, "ArrowLeft", false},
-    {5, 9, HID_KEY_ARROW_RIGHT, "ArrowRight", false}
-};
-
 // Indicate we have power. It's a handy diagnostic that shows the code is running.
-const uint POWER_LED = 15;
+// const uint POWER_LED = 15;
 
 uint8_t keyPressed = HID_KEY_NONE;
 
@@ -107,23 +77,23 @@ static void send_hid_report(uint8_t report_id, bool isKeyPressed)
 	{
 		case REPORT_ID_KEYBOARD:
 		{
-			// use to avoid send multiple consecutive zero report for keyboard
-			static bool has_keyboard_key = false;
+			// // use to avoid send multiple consecutive zero report for keyboard
+			// static bool has_keyboard_key = false;
 
-			if (isKeyPressed)
-			{
-				uint8_t keycode[6] = {0};
-				keycode[0] = keyPressed;
+			// if (isKeyPressed)
+			// {
+			// 	uint8_t keycode[6] = {0};
+			// 	keycode[0] = keyPressed;
 
-				tud_hid_keyboard_report(REPORT_ID_KEYBOARD, 0, keycode);
-				has_keyboard_key = true;
-			}
-			else
-			{
-				// send empty key report if previously has key pressed
-				if (has_keyboard_key) tud_hid_keyboard_report(REPORT_ID_KEYBOARD, 0, NULL);
-				has_keyboard_key = false;
-			}
+			// 	tud_hid_keyboard_report(REPORT_ID_KEYBOARD, 0, keycode);
+			// 	has_keyboard_key = true;
+			// }
+			// else
+			// {
+			// 	// send empty key report if previously has key pressed
+			// 	if (has_keyboard_key) tud_hid_keyboard_report(REPORT_ID_KEYBOARD, 0, NULL);
+			// 	has_keyboard_key = false;
+			// }
 		}
 		break;
 
@@ -138,32 +108,32 @@ static void send_hid_report(uint8_t report_id, bool isKeyPressed)
 
 		case REPORT_ID_CONSUMER_CONTROL:
 		{
-			// use to avoid send multiple consecutive zero report
-			static bool has_consumer_key = false;
+			// // use to avoid send multiple consecutive zero report
+			// static bool has_consumer_key = false;
 
-			if (isKeyPressed)
-			{
-				// volume down
-				uint16_t volume_down = HID_USAGE_CONSUMER_VOLUME_DECREMENT;
-				tud_hid_report(REPORT_ID_CONSUMER_CONTROL, &volume_down, 2);
-				has_consumer_key = true;
-			}
-			else
-			{
-				// send empty key report (release key) if previously has key pressed
-				uint16_t empty_key = 0;
-				if (has_consumer_key) tud_hid_report(REPORT_ID_CONSUMER_CONTROL, &empty_key, 2);
-				has_consumer_key = false;
-			}
+			// if (isKeyPressed)
+			// {
+			// 	// volume down
+			// 	uint16_t volume_down = HID_USAGE_CONSUMER_VOLUME_DECREMENT;
+			// 	tud_hid_report(REPORT_ID_CONSUMER_CONTROL, &volume_down, 2);
+			// 	has_consumer_key = true;
+			// }
+			// else
+			// {
+			// 	// send empty key report (release key) if previously has key pressed
+			// 	uint16_t empty_key = 0;
+			// 	if (has_consumer_key) tud_hid_report(REPORT_ID_CONSUMER_CONTROL, &empty_key, 2);
+			// 	has_consumer_key = false;
+			// }
 		}
 		break;
 
 		case REPORT_ID_GAMEPAD:
 		{
 			// use to avoid send multiple consecutive zero report for keyboard
-			static bool has_gamepad_key = false;
+			static bool hasGamepadKey = false;
 
-			hid_gamepad_report_t report =
+			hid_gamepad_report_t gampadReport =
 			{
 				.x = 0,
 				.y = 0,
@@ -175,20 +145,26 @@ static void send_hid_report(uint8_t report_id, bool isKeyPressed)
 				.buttons = 0
 			};
 
-			if (isKeyPressed)
+			if (HasDigitalSwitchStateChanged())
 			{
-				report.hat = GAMEPAD_HAT_UP;
-				report.buttons = GAMEPAD_BUTTON_A;
-				tud_hid_report(REPORT_ID_GAMEPAD, &report, sizeof(report));
+				// Normal report.
+				gampadReport.hat = GAMEPAD_HAT_CENTERED; // TODO: Use joystick for the hat.
+				gampadReport.buttons = GetDigitalSwitchesState();
+				tud_hid_report(REPORT_ID_GAMEPAD, &gampadReport, sizeof(gampadReport));
 
-				has_gamepad_key = true;
+				hasGamepadKey = true;
 			}
 			else
 			{
-				report.hat = GAMEPAD_HAT_CENTERED;
-				report.buttons = 0;
-				if (has_gamepad_key) tud_hid_report(REPORT_ID_GAMEPAD, &report, sizeof(report));
-				has_gamepad_key = false;
+				// Empty report.
+				gampadReport.hat = GAMEPAD_HAT_CENTERED;
+				//gampadReport.buttons = 0;
+				gampadReport.buttons = GetDigitalSwitchesState();
+
+				if (hasGamepadKey)
+					tud_hid_report(REPORT_ID_GAMEPAD, &gampadReport, sizeof(gampadReport));
+
+				hasGamepadKey = false;
 			}
 		}
 		break;
@@ -272,7 +248,7 @@ void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_
 void hid_task(void)
 {
 	bool const isKeyPressed = (keyPressed != HID_KEY_NONE);
-	gpio_put(POWER_LED, isKeyPressed);
+	// gpio_put(POWER_LED, isKeyPressed);
 
 	// Remote wakeup
 	if (tud_suspended() && isKeyPressed)
@@ -283,59 +259,8 @@ void hid_task(void)
 	else
 	{
 		// Send the 1st of report chain, the rest will be sent by tud_hid_report_complete_cb()
-		send_hid_report(REPORT_ID_KEYBOARD, isKeyPressed);
-	}
-}
-
-
-void SwitchTask()
-{
-	uint32_t currentTime = time_us_32();
-
-	// Default is for nothing to happen.
-	keyPressed = HID_KEY_NONE;
-
-	// Detect their state.
-	for (size_t i = 0; i < switchCount; i++)
-	{
-		// Get their pressed state.
-		const bool currentSwitchState = gpio_get(switchArray[i].switchId);
-
-		// State change - make something happen.
-		if (switchArray[i].isPressed != currentSwitchState)
-		{
-			uint32_t timeInThisState = currentTime - switchArray[i].timeStateWasEntered;
-
-			// DEBUG: Testing the time difference on loops.
-			printf("\nLT: %u, CT: %u, TSE: %u, TiS: %u, ",
-				lastTaskTime,
-				currentTime,
-				switchArray[i].timeStateWasEntered,
-				timeInThisState);
-
-			if (currentSwitchState)
-			{
-				gpio_put(switchArray[i].ledID, false);
-				printf("%s\n", switchArray[i].mappedKeyName);
-			}
-			else
-			{
-				keyPressed = switchArray[i].mappedKey;
-				gpio_put(switchArray[i].ledID, true);
-				printf("%s\n", switchArray[i].mappedKeyName);
-			}
-
-			// Entering a new state, reset the time now.
-			switchArray[i].timeStateWasEntered = currentTime;
-			switchArray[i].isPressed = currentSwitchState;
-		}
-		else
-		{
-			// Same state as last run, make something less exciting happen.
-
-			// DEBUG: Testing the time difference on loops.
-			// printf(".");
-		}
+//		send_hid_report(REPORT_ID_KEYBOARD, isKeyPressed);
+		send_hid_report(REPORT_ID_GAMEPAD, isKeyPressed);
 	}
 }
 
@@ -353,7 +278,6 @@ void LEDBlinkingTask(void)
 		return;
 	elapsedMS += blinkIntervalMS;
 
-	//printf(".");
 	board_led_write(ledState);
 	ledState = 1 - ledState; // toggle
 }
@@ -366,33 +290,19 @@ int main(void)
 	board_init();
 	tusb_init();
 	
-	printf("Centre console online.\n");
+	printf("Centre console online.\n\n");
 
 	// We'll track the time from startup.
 	lastTaskTime = time_us_32();
 
-	// Initialise all the switches.
-	for (size_t i = 0; i < switchCount; i++)
-	{
-		// Initialise the switch pins for input.
-		gpio_init(switchArray[i].switchId);
-		gpio_set_dir(switchArray[i].switchId, GPIO_IN);
-
-		// Initialise the LED pins for output.
-		gpio_init(switchArray[i].ledID);
-		gpio_set_dir(switchArray[i].ledID, GPIO_OUT);
-
-		// Give everything else sensible defaults.
-		switchArray[i].timeStateWasEntered = lastTaskTime;
-		switchArray[i].isPressed = false;
-	}
+	void InitDigitalSwitches();
 
 	// Give ourselves a power LED indicator for debugging.
-	gpio_init(POWER_LED);
-    gpio_set_dir(POWER_LED, GPIO_OUT);
-	gpio_put(POWER_LED, true);
+	// gpio_init(POWER_LED);
+    // gpio_set_dir(POWER_LED, GPIO_OUT);
+	// gpio_put(POWER_LED, true);
 
-	while (1)
+	while (true)
 	{
 		// TinyUSB device task.
 		tud_task();
@@ -401,7 +311,11 @@ int main(void)
 		LEDBlinkingTask();
 
 		// Check all our switches.
-		SwitchTask();
+		if (DigitalSwitchTask())
+		{
+			// HACK: Just doing it to push the notifications out till I can remove this.
+			keyPressed = HID_KEY_A;
+		}
 		
 		// Keep them informed about HID changes.
 		hid_task();

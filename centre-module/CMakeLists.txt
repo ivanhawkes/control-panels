@@ -5,6 +5,7 @@ add_executable(centre_module)
 target_sources(centre_module PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}/src/main.c
         ${CMAKE_CURRENT_LIST_DIR}/src/usb_descriptors.c
+        ${CMAKE_CURRENT_LIST_DIR}/src/digital_switch.c
         )
 
 # Make sure TinyUSB can find tusb_config.h
