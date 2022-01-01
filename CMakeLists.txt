@@ -25,5 +25,31 @@ add_compile_options(
     -Wno-unused-function # we have some for the docs that aren't called
     -Wno-maybe-uninitialized)
 
+# Check if the submodules are present, download if needed.
+find_package(Git QUIET)
+if(GIT_FOUND)
+        # Update submodules as needed
+    option(GIT_SUBMODULE "Check submodules during build" ON)
+    if(GIT_SUBMODULE)
+        message(STATUS "Submodule update")
+        execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
+                        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                        RESULT_VARIABLE GIT_SUBMOD_RESULT)
+        if(NOT GIT_SUBMOD_RESULT EQUAL "0")
+            message(FATAL_ERROR "git submodule update --init failed with ${GIT_SUBMOD_RESULT}, please checkout submodules")
+        endif()
+    endif()
+endif()
+
+set(EXTERNAL_PATH ${PROJECT_SOURCE_DIR}/src/external)
+
 # Hardware folders:
 add_subdirectory(centre-module)
+
+# Add any external dependancies.
+add_subdirectory("${EXTERNAL_PATH}")
+
+# Safety check - just check one of the submodules we know should be there now.
+if(NOT EXISTS "${EXTERNAL_PATH}/MPG/CMakeLists.txt")
+    message(FATAL_ERROR "The submodules were not downloaded! GIT_SUBMODULE was turned off or failed. Please update submodules and try again.")
+endif()
