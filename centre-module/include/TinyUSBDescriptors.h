@@ -1,5 +1,4 @@
-#ifndef USB_DESCRIPTORS_H_
-#define USB_DESCRIPTORS_H_
+#pragma once
 
 enum
 {
@@ -9,5 +8,3 @@ enum
 	REPORT_ID_GAMEPAD,
 	REPORT_ID_COUNT
 };
-
-#endif

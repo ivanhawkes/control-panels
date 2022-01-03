@@ -33,7 +33,8 @@ class DigitalInput
 class DigitalInputGroup : IPicoInput
 {
   public:
-	const size_t kDigitalInputCount = 21;
+	// const size_t kDigitalInputCount = 21;
+	const size_t kDigitalInputCount = 17;
 
 	// Call to initialise.
 	virtual void Init() override;

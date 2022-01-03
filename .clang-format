@@ -2,7 +2,7 @@
 BasedOnStyle: Microsoft
 AlignAfterOpenBracket: AlwaysBreak
 AllowShortBlocksOnASingleLine: 'true'
-AllowShortCaseLabelsOnASingleLine: 'true'
+AllowShortCaseLabelsOnASingleLine: 'false'
 BinPackArguments: 'true'
 BinPackParameters: 'true'
 BreakBeforeBraces: Allman
