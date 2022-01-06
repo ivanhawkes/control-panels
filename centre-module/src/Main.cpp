@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string>
 
+#include <entt/entt.hpp>
+
 #include "TinyUSBCallbacks.h"
 #include "TinyUSBDescriptors.h"
 #include "tusb.h"
@@ -14,7 +16,7 @@
 #include "AnalogueInput.h"
 #include "DigitalInput.h"
 
-#include <entt/entt.hpp>
+#include "Components.h"
 
 
 uint32_t lastTaskTime;
