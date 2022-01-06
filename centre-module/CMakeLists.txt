@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.14)
 
 add_executable(centre_module)
 
@@ -11,7 +11,8 @@ target_sources(centre_module PUBLIC
         )
 
 # Set a path to our includes.
-target_include_directories(centre_module PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
+target_include_directories(centre_module PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include
+        ${EXTERNAL_PATH}/entt/src)
 
 # In addition to pico_stdlib required for common PicoSDK functionality, add dependency on tinyusb_device
 # for TinyUSB device support, and tinyusb_board for the additional board support library.

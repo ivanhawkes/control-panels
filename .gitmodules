@@ -1,3 +1,6 @@
 [submodule "centre-module/external/MPG"]
 	path = src/external/MPG
 	url = git@github.com:ivanhawkes/MPG.git
+[submodule "src/external/entt"]
+	path = src/external/entt
+	url = git@github.com:skypjack/entt.git

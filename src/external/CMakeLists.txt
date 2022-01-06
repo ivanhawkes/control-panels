@@ -1,3 +1,5 @@
+cmake_minimum_required(VERSION 3.14)
+
 # Multi-Platform Gamepad Library.
 add_subdirectory("MPG")
 
