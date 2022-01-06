@@ -19,20 +19,21 @@ Sample entity:
 
 This should be able to set the LED state from the Switch state. Both will need to read / write to a common state.
 
+The shared state can be in the main system code or available to each system at the least.
+
+Might need some state in the registry, which can be retrieved, then used for a system and updated by the system.
+
+Expansion through I2C and SPI will be required, so we'll need a way to know which bus / component wants is hooked
+to which state components.
+
+Bonus points: be able to update a small OLED display.
+
 */
 
 struct GPIOComponent
 {
-	// The GPIO pin number which the switch is connected to.
-	uint32_t gpioLEDId;
-};
-
-
-struct IsEnabledComponent
-{
-	// True if enabled, false otherwise. Use this to selectively enable entities.
-	// NOTE: This might be better in the opposite configuration.
-	bool isEnabled{true};
+	// The GPIO pin number which this component represents.
+	uint8_t gpioId;
 };
 
 
@@ -43,10 +44,21 @@ struct SwitchComponent
 };
 
 
-// Idea will need refining...and is likely wrong, just here to remind me to hook things up to state data somewhere.
-struct SwitchStateComponent
+struct Bitset32Component
 {
 	uint32_t state;
+};
+
+
+struct Bitset16Component
+{
+	uint16_t state;
+};
+
+
+struct Bitset8Component
+{
+	uint8_t state;
 };
 
 
@@ -73,8 +85,8 @@ struct RotaryEncoderComponent
 
 struct KeyComponent
 {
-	// The key code value(s) that this component represents.
-	uint8_t keycode[6]{0, 0, 0, 0, 0, 0};
+	// The key code value that this component represents.
+	uint8_t keycode{0};
 };
 
 
@@ -85,20 +97,148 @@ struct KeyModifierComponent
 };
 
 
+// HINT: Use with a Delta2D8BitComponent (X,Y), Delta1D8BitComponent (mousewheel), Bitset8Component (buttonMask).
 struct MouseComponent
 {
-	// Buttons mask for currently pressed buttons on the mouse.
-	uint8_t buttonMask;
+	// Using AC Pan - what the hell is that?
+	// TODO: Remove if not needed.
+	int8_t pan;
+};
 
-	// Current delta x movement of the mouse.
+
+struct Delta1D8BitComponent
+{
+	int8_t delta;
+};
+
+
+struct Delta2D8BitComponent
+{
+	// X-axis.
 	int8_t deltaX;
 
-	// Current delta y movement of the mouse.
+	// Y-axis.
+	int8_t deltaY;
+};
+
+
+struct Delta3D8BitComponent
+{
+	// X-axis.
+	int8_t deltaX;
+
+	// Y-axis.
 	int8_t deltaY;
 
-	// Current delta of the mouse wheel.
-	int8_t deltaWheel;
+	// Z-axis.
+	int8_t deltaZ;
+};
 
-	// Using AC Pan.
-	int8_t pan;
+
+struct Delta1D16BitComponent
+{
+	int16_t delta;
+};
+
+
+struct Delta2D16BitComponent
+{
+	// X-axis.
+	int16_t deltaX;
+
+	// Y-axis.
+	int16_t deltaY;
+};
+
+
+struct Delta3D16BitComponent
+{
+	// X-axis.
+	int16_t deltaX;
+
+	// Y-axis.
+	int16_t deltaY;
+
+	// Z-axis.
+	int16_t deltaZ;
+};
+
+
+struct TimerUSComponent
+{
+	// The number of microseconds that have passed.
+	uint32_t microseconds;
+};
+
+
+// Toggle like a flip flop.
+struct FlipFlopComponent
+{
+	// Is the flipflop high / low?
+	bool isHigh{false};
+};
+
+
+// Simple counting tool.
+struct CounterComponent
+{
+	uint32_t value;
+};
+
+
+struct I2CComponent
+{
+	// HINT: Use with BusIdComponent and DeviceIdComponent components.
+};
+
+
+struct SPIComponent
+{
+	// HINT: Use with BusIdComponent and DeviceIdComponent components.
+};
+
+
+struct BusIdComponent
+{
+	// The unique bus identifier.
+	uint8_t busId;
+};
+
+
+struct DeviceIdComponent
+{
+	// The unique device identifier.
+	uint8_t deviceId;
+};
+
+
+struct DirtyComponent
+{
+	// Indicates some data in the entity has been updated and is now dirty. This data should be flushed by
+	// later systems e.g. KeyComponent + Dirty = send keypress report.
+};
+
+
+struct RGBColourComponent
+{
+	// The level of red.
+	uint8_t red;
+
+	// The level of green.
+	uint8_t green;
+
+	// The level of blue.
+	uint8_t blue;
+};
+
+
+struct LEDStripComponent
+{
+	// TODO: Support for RGB strip lighting.
+};
+
+
+struct IOExpanderComponent
+{
+	// HINT: Use with DeviceIdComponent, BusIdComponent or similar, and some state e.g. Bitset32Component.
 };
