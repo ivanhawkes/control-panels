@@ -22,8 +22,6 @@
 #include "Systems.h"
 
 
-uint32_t lastTaskTime;
-
 static DigitalInputGroup g_digitalInputGroup;
 static AnalogueInputGroup g_analogueSwitchGroup;
 
@@ -123,27 +121,12 @@ void SendHIDTask(void)
 }
 
 
-void LEDBlinkingTask(void)
-{
-	static uint32_t elapsedMS = 0;
-	static bool ledState = false;
-
-	// blink is disabled
-	if (!blinkIntervalMS)
-		return;
-
-	// Blink every interval ms
-	if (board_millis() - elapsedMS < blinkIntervalMS)
-		return;
-	elapsedMS += blinkIntervalMS;
-
-	board_led_write(ledState);
-	ledState = 1 - ledState; // toggle
-}
-
-
 int main(void)
 {
+	uint32_t startTaskTime;
+	uint32_t endTaskTime;
+	uint32_t deltaTime{0};
+
 	// Our registry used for all the ECS operations.
 	entt::registry registry;
 
@@ -158,9 +141,6 @@ int main(void)
 
 	printf("Centre console online.\n\n");
 
-	// We'll track the time from startup.
-	lastTaskTime = time_us_32();
-
 	// Init our input handlers.
 	g_digitalInputGroup.Init();
 	g_analogueSwitchGroup.Init();
@@ -170,16 +150,18 @@ int main(void)
 	// Load up some components so we can test this thing.
 	CreateTestCases(registry);
 
-	// Test the ECS.
-	Update(registry);
+	startTaskTime = time_us_32();
 
 	while (true)
 	{
+		// We'll track the time from startup.
+		startTaskTime = time_us_32();
+
 		// TinyUSB device task.
 		tud_task();
 
-		// Blinky blink.
-		LEDBlinkingTask();
+		// Test the ECS.
+		Update(registry, startTaskTime, deltaTime);
 
 		// Check all our switches.
 		if (g_digitalInputGroup.OnTask()) {}
@@ -191,7 +173,10 @@ int main(void)
 		SendHIDTask();
 
 		// Track time.
-		lastTaskTime = time_us_32();
+		endTaskTime = time_us_32();
+		deltaTime = endTaskTime - startTaskTime;
+
+		// printf("start = %u, end = %u, delta = %u\n", startTaskTime, endTaskTime, deltaTime);
 	}
 
 	return 0;

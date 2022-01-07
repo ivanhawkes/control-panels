@@ -3,7 +3,9 @@
 #include <entt/entt.hpp>
 
 
-void Update(entt::registry &registry);
+void Update(entt::registry &registry, uint32_t startTaskTime, uint32_t deltaTime);
+
+void SystemUpdateTimers(entt::registry &registry, uint32_t startTaskTime, uint32_t deltaTime);
 
 void SystemReadDigitalInputs(entt::registry &registry);
 
