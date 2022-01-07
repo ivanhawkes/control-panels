@@ -97,7 +97,7 @@ struct KeyModifierComponent
 };
 
 
-// HINT: Use with a Delta2D8BitComponent (X,Y), Delta1D8BitComponent (mousewheel), Bitset8Component (buttonMask).
+// HINT: Use with a Delta2Axis8BitComponent (X,Y), Delta1Axis8BitComponent (mousewheel), Bitset8Component (buttonMask).
 struct MouseComponent
 {
 	// Using AC Pan - what the hell is that?
@@ -106,13 +106,13 @@ struct MouseComponent
 };
 
 
-struct Delta1D8BitComponent
+struct Delta1Axis8BitComponent
 {
 	int8_t delta;
 };
 
 
-struct Delta2D8BitComponent
+struct Delta2Axis8BitComponent
 {
 	// X-axis.
 	int8_t deltaX;
@@ -122,7 +122,7 @@ struct Delta2D8BitComponent
 };
 
 
-struct Delta3D8BitComponent
+struct Delta3Axis8BitComponent
 {
 	// X-axis.
 	int8_t deltaX;
@@ -135,13 +135,13 @@ struct Delta3D8BitComponent
 };
 
 
-struct Delta1D16BitComponent
+struct Delta1Axis16BitComponent
 {
 	int16_t delta;
 };
 
 
-struct Delta2D16BitComponent
+struct Delta2Axis16BitComponent
 {
 	// X-axis.
 	int16_t deltaX;
@@ -151,7 +151,7 @@ struct Delta2D16BitComponent
 };
 
 
-struct Delta3D16BitComponent
+struct Delta3Axis16BitComponent
 {
 	// X-axis.
 	int16_t deltaX;

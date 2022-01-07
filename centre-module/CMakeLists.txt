@@ -8,6 +8,8 @@ target_sources(centre_module PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}/src/TinyUSBCallbacks.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/DigitalInput.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/AnalogueInput.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/Systems.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/FightStick.cpp
         )
 
 # Set a path to our includes.
