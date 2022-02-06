@@ -36,18 +36,18 @@ void Update(entt::registry &registry, uint32_t startTaskTime, uint32_t deltaTime
 
 void SystemUpdateTimers(entt::registry &registry, uint32_t startTaskTime, uint32_t deltaTime)
 {
-	registry.view<TimerUSComponent>().each([deltaTime](auto entity, auto &timer) { timer.microseconds += deltaTime; });
+	registry.view<TimerUSComponent>().each([deltaTime](auto entity, auto &timer) { timer.elapsedMS += deltaTime; });
 }
 
 
 void SystemUpdateLED(entt::registry &registry)
 {
-	registry.view<GPIOComponent, LEDComponent, TimerUSComponent>().each(
+	registry.view<GPIODigitalOuputComponent, LEDComponent, TimerUSComponent>().each(
 	    [](auto entity, auto &gpio, auto &led, auto &timer) {
-		    if (timer.microseconds > 100000)
+		    if (timer.elapsedMS > timer.duration)
 		    {
 			    led.isOn = !led.isOn;
-			    timer.microseconds = 0U;
+			    timer.elapsedMS = 0U;
 			    gpio_put(gpio.gpioId, led.isOn);
 		    }
 	    });

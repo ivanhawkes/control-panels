@@ -30,7 +30,31 @@ Bonus points: be able to update a small OLED display.
 
 */
 
-struct GPIOComponent
+// TODO: Have the input / output components initialise their pins when added to an entity or during
+// an init routine.
+
+struct GPIODigitalInputComponent
+{
+	// The GPIO pin number which this component represents.
+	uint8_t gpioId;
+};
+
+
+struct GPIODigitalOuputComponent
+{
+	// The GPIO pin number which this component represents.
+	uint8_t gpioId;
+};
+
+
+struct GPIOAnalogueInputComponent
+{
+	// The GPIO pin number which this component represents.
+	uint8_t gpioId;
+};
+
+
+struct GPIOAnalogueOutputComponent
 {
 	// The GPIO pin number which this component represents.
 	uint8_t gpioId;
@@ -166,8 +190,11 @@ struct Delta3Axis16BitComponent
 
 struct TimerUSComponent
 {
-	// The number of microseconds that have passed.
-	uint32_t microseconds;
+	// The duration that must pass before the timer is activated.
+	uint32_t duration;
+
+	// The number of microseconds that have passed since the timer was started.
+	uint32_t elapsedMS;
 };
 
 

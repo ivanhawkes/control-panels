@@ -26,14 +26,15 @@ class DigitalInput switchArray[]{
     {11, GAMEPAD_BUTTON_12, "L1"},   // 4p, L1, LB
 
     // Left panel buttons.
-    {12, GAMEPAD_BUTTON_13, "-14-"}, // Used for LED I think.
-    {13, GAMEPAD_BUTTON_14, "-15-"}, // Used for LED I think.
+    {12, GAMEPAD_BUTTON_13, "-12-"}, // Used for LED I think.
+    {13, GAMEPAD_BUTTON_14, "-13-"}, // Used for LED I think.
 
     // Rear panel buttons.
-    // {14, GAMEPAD_BUTTON_SELECT, "S1"}, // Select, S1, Back
-    // {15, GAMEPAD_BUTTON_START, "S2"},  // Start, S2, Start
+    {14, GAMEPAD_BUTTON_SELECT, "S1"}, // Select, S1, Back
+    {15, GAMEPAD_BUTTON_START, "S2"},  // Start, S2, Start
 
     // Right panel buttons.
+    // NOTE: Currently using 16+17 for UART - may change with Hydra board.
     // {16, GAMEPAD_BUTTON_15, "L3"}, // LS, L3, LS
     // {17, GAMEPAD_BUTTON_16, "R3"}, // RS, R3, RS
 

@@ -20,7 +20,7 @@ void CreateTestCases(entt::registry &registry)
 void CreateFlashingLED(entt::registry &registry)
 {
 	const auto entity = registry.create();
-	registry.emplace<GPIOComponent>(entity, uint8_t(25U));
+	registry.emplace<GPIODigitalOuputComponent>(entity, uint8_t(25U));
 	registry.emplace<LEDComponent>(entity, false);
-	registry.emplace<TimerUSComponent>(entity, 0U);
+	registry.emplace<TimerUSComponent>(entity, 100000U, 0U);
 }

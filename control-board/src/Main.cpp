@@ -27,7 +27,7 @@ enum
 
 uint32_t lastTaskTime;
 
-uint32_t blinkIntervalMS = blinkIntervalNotMounted;
+// uint32_t blinkIntervalMS = blinkIntervalNotMounted;
 
 static DigitalInputGroup g_digitalInputGroup;
 static AnalogueInputGroup g_analogueSwitchGroup;
@@ -63,9 +63,15 @@ void SendGamepadHIDReport(uint8_t report_id)
 		uint8_t state = g_digitalInputGroup.GetState() & 0x0F;
 		switch (state & 0x0F)
 		{
-			case 1: report.hat = GAMEPAD_HAT_UP; break;
-			case 2: report.hat = GAMEPAD_HAT_DOWN; break;
-			case 4: report.hat = GAMEPAD_HAT_LEFT; break;
+			case 1:
+				report.hat = GAMEPAD_HAT_UP;
+				break;
+			case 2:
+				report.hat = GAMEPAD_HAT_DOWN;
+				break;
+			case 4:
+				report.hat = GAMEPAD_HAT_LEFT;
+				break;
 			case 8:
 				report.hat = GAMEPAD_HAT_RIGHT;
 				break;
@@ -75,7 +81,9 @@ void SendGamepadHIDReport(uint8_t report_id)
 				// case GAMEPAD_MASK_UP | GAMEPAD_MASK_RIGHT: report.hat = HID_HAT_UPRIGHT; break;
 				// case GAMEPAD_MASK_DOWN | GAMEPAD_MASK_RIGHT: report.hat = HID_HAT_DOWNRIGHT; break;
 
-			default: report.hat = HID_HAT_NOTHING; break;
+			default:
+				report.hat = HID_HAT_NOTHING;
+				break;
 		}
 
 		// HACK: TEST: Send raw bits out.
