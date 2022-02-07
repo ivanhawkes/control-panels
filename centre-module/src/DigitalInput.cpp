@@ -8,26 +8,26 @@
 
 class DigitalInput switchArray[]{
     // Joystick.
-    {0, GAMEPAD_MASK_UP, "Joy Up"},       // Up
-    {1, GAMEPAD_MASK_DOWN, "Joy Down"},   // Down
-    {2, GAMEPAD_MASK_RIGHT, "Joy Right"}, // Right
-    {3, GAMEPAD_MASK_LEFT, "Joy Left"},   // Left
+    {0, GAMEPAD_BUTTON_0, "Joy Down"},  // Down
+    {1, GAMEPAD_BUTTON_1, "Joy Up"},    // Up
+    {2, GAMEPAD_BUTTON_2, "Joy Left"},  // Left
+    {3, GAMEPAD_BUTTON_3, "Joy Right"}, // Right
 
     // Lower row of top panel buttons (left to right).
-    {4, GAMEPAD_BUTTON_SOUTH, "B1"}, // 1k, B1, A, Circle
-    {5, GAMEPAD_BUTTON_EAST, "B2"},  // 2k, B2, B, Cross
-    {6, GAMEPAD_BUTTON_9, "R2"},     // 3k, R2, RT
-    {7, GAMEPAD_BUTTON_10, "L2"},    // 4k, L2, LT
+    {4, GAMEPAD_BUTTON_4, "B1"}, // 1k, B1, A, Circle
+    {5, GAMEPAD_BUTTON_5, "B2"}, // 2k, B2, B, Cross
+    {6, GAMEPAD_BUTTON_8, "R2"}, // 3k, R2, RT
+    {7, GAMEPAD_BUTTON_9, "L2"}, // 4k, L2, LT
 
     // Upper row of top panel buttons (left to right).
-    {8, GAMEPAD_BUTTON_WEST, "B3"},  // 1p, B3, X, Triangle
-    {9, GAMEPAD_BUTTON_NORTH, "B4"}, // 2p, B4, Y, Square
-    {10, GAMEPAD_BUTTON_11, "R1"},   // 3p, R1, RB
-    {11, GAMEPAD_BUTTON_12, "L1"},   // 4p, L1, LB
+    {8, GAMEPAD_BUTTON_6, "B3"},   // 1p, B3, X, Triangle
+    {9, GAMEPAD_BUTTON_7, "B4"},   // 2p, B4, Y, Square
+    {10, GAMEPAD_BUTTON_10, "R1"}, // 3p, R1, RB
+    {11, GAMEPAD_BUTTON_11, "L1"}, // 4p, L1, LB
 
     // Left panel buttons.
-    {12, GAMEPAD_BUTTON_13, "-12-"}, // Used for LED I think.
-    {13, GAMEPAD_BUTTON_14, "-13-"}, // Used for LED I think.
+    {12, GAMEPAD_BUTTON_12, "-12-"}, // Used for LED I think.
+    {13, GAMEPAD_BUTTON_13, "-13-"}, // Used for LED I think.
 
     // Rear panel buttons.
     {14, GAMEPAD_BUTTON_SELECT, "S1"}, // Select, S1, Back
