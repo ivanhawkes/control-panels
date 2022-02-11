@@ -8,3 +8,9 @@ void CreateTestCases(entt::registry &registry);
 
 // Add an entity that will control a flashing LED.
 void CreateFlashingLED(entt::registry &registry);
+
+void CreateDigitalInput(entt::registry &registry);
+
+void CreateDigitalOutput(entt::registry &registry);
+
+void CreateAnalogueInput(entt::registry &registry);

@@ -84,6 +84,8 @@ void SendGamepadHIDReport(uint8_t report_id)
 
 		// Digital buttons.
 		report.buttons = g_digitalInputGroup.GetState();
+
+		// NOTE: ILH: WTF? Is this the wrong report for this information? Look into it.
 		tud_hid_report(REPORT_ID_GAMEPAD, &report, sizeof(report));
 
 		// hasGamepadKey = true;
@@ -150,7 +152,13 @@ int main(void)
 	// Load up some components so we can test this thing.
 	CreateTestCases(registry);
 
+	// Perform any initalisation required based on the registry. This will set pin input / output, directions, etc.
+	SystemInit(registry);
+
 	startTaskTime = time_us_32();
+
+	// Literally only doing this to shut up a compiler warning about this variable not being used.
+	blinkIntervalMS = blinkIntervalMounted;
 
 	while (true)
 	{

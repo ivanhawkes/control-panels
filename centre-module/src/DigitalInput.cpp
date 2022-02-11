@@ -35,15 +35,15 @@ class DigitalInput switchArray[]{
 
     // Right panel buttons.
     // NOTE: Currently using 16+17 for UART - may change with Hydra board.
-    // {16, GAMEPAD_BUTTON_15, "L3"}, // LS, L3, LS
-    // {17, GAMEPAD_BUTTON_16, "R3"}, // RS, R3, RS
+    // {16, GAMEPAD_BUTTON_16, "L3"}, // LS, L3, LS
+    // {17, GAMEPAD_BUTTON_17, "R3"}, // RS, R3, RS
 
     // Front panel buttons (left to right).
-    {18, GAMEPAD_BUTTON_17, "A1"}, // Home, A1, XBOX
-    {19, GAMEPAD_BUTTON_18, "A2"}, // TP, A2, -
+    {18, GAMEPAD_BUTTON_18, "A1"}, // Home, A1, XBOX
+    {19, GAMEPAD_BUTTON_19, "A2"}, // TP, A2, -
 
     // Top panel. Extra
-    {20, GAMEPAD_BUTTON_19, "Insert Coin"}, // Insert coin
+    {20, GAMEPAD_BUTTON_20, "Insert Coin"}, // Insert coin
 };
 
 

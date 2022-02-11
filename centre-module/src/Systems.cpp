@@ -2,6 +2,7 @@
 #include "Components.h"
 
 #include "bsp/board.h"
+#include "hardware/adc.h"
 #include "pico/stdlib.h"
 
 
@@ -51,4 +52,71 @@ void SystemUpdateLED(entt::registry &registry)
 			    gpio_put(gpio.gpioId, led.isOn);
 		    }
 	    });
+}
+
+
+void SystemInit(entt::registry &registry)
+{
+	SystemInitOnboardDigitalInput(registry);
+	SystemInitOnboardDigitalOutput(registry);
+	SystemInitOnboardAnalogueInput(registry);
+}
+
+
+void SystemInitOnboardDigitalInput(entt::registry &registry)
+{
+	printf("ECS - Digital pins input:\n\n");
+
+	registry.view<GPIODigitalInputComponent>().each([](auto entity, auto &gpio) {
+		gpio_init(gpio.gpioId);
+		gpio_set_dir(gpio.gpioId, GPIO_IN);
+		gpio_pull_up(gpio.gpioId);
+
+		printf("Init PinId: %d.\n", gpio);
+
+		// Give everything else sensible defaults.
+		// switchArray[i].timeStateWasEntered = initTime;
+		// switchArray[i].isPressed = false;
+	});
+}
+
+
+void SystemInitOnboardDigitalOutput(entt::registry &registry)
+{
+	printf("ECS - Digital pins out:\n\n");
+
+	registry.view<GPIODigitalOuputComponent>().each([](auto entity, auto &gpio) {
+		gpio_init(gpio.gpioId);
+		gpio_set_dir(gpio.gpioId, GPIO_OUT);
+
+		printf("Init PinId: %d.\n", gpio);
+	});
+}
+
+
+void SystemInitOnboardAnalogueInput(entt::registry &registry)
+{
+	printf("ECS - Analogue pins:\n\n");
+
+	registry.view<GPIOAnalogueInputComponent>().each([](auto entity, auto &gpio) {
+		adc_gpio_init(gpio.gpioId);
+
+		printf("Init PinId: %d.\n", gpio);
+
+		// Default the raw input values to the mid-position.
+		// NOTE: This might be entirely wrong for a controller like a thrust stick.
+		// NOTE: Might also just be a bad idea for init.
+	});
+}
+
+
+void SystemReadOnboardDigitalInputs(entt::registry &registry, uint32_t &valueBitset)
+{
+	// Should I read all the onboard in one call?
+	// How should this be passed out? Does this even make sense doing one at a time, or all at once?
+	// Some might be set to output, what happens then?
+
+	// IDEA: Read in one go, use the GPIO pins to re-order it for the Buttons collection output.
+	// Against - .
+	// For - fast.
 }

@@ -86,6 +86,24 @@ struct Bitset8Component
 };
 
 
+struct Analogue32Component
+{
+	int32_t value;
+};
+
+
+struct Analogue16Component
+{
+	int16_t value;
+};
+
+
+struct Analogue8Component
+{
+	int8_t value;
+};
+
+
 struct LEDComponent
 {
 	// Is the switch currently depressed?
@@ -210,6 +228,13 @@ struct FlipFlopComponent
 struct CounterComponent
 {
 	uint32_t value;
+};
+
+
+// Flags an entity as affecting the in-built Pico board GPIO.
+struct PicoBoardComponent
+{
+	// HINT: Use with BusIdComponent and DeviceIdComponent components.
 };
 
 
