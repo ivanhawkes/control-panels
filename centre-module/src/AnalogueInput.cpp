@@ -41,9 +41,9 @@ bool AnalogueInputGroup::OnTask()
 	// HACK: DEBUG: checking the button state every so often.
 	static int count = 0;
 	count++;
-	if (count > 20000)
+	if (count > 80000)
 	{
-		printf("0 = %d, 1 = %d, 2 = %d\n", GetRawValue(0), GetRawValue(1), GetRawValue(2));
+		printf("Analogue Raw Values = %d, 1 = %d, 2 = %d\n", GetRawValue(0), GetRawValue(1), GetRawValue(2));
 		count = 0;
 
 		// endTaskTime = time_us_32();

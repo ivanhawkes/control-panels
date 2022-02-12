@@ -35,12 +35,14 @@ void CreateDigitalInput(entt::registry &registry)
 	{
 		const auto entity = registry.create();
 		registry.emplace<GPIODigitalInputComponent>(entity, uint8_t(i));
+		registry.emplace<SwitchComponent>(entity, false);
 	}
 
 	for (int i = 18; i < 21; ++i)
 	{
 		const auto entity = registry.create();
 		registry.emplace<GPIODigitalInputComponent>(entity, uint8_t(i));
+		registry.emplace<SwitchComponent>(entity, false);
 	}
 }
 
