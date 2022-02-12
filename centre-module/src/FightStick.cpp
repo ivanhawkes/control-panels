@@ -47,7 +47,7 @@ void CreateDigitalInput(entt::registry &registry)
 
 void CreateAnalogueInput(entt::registry &registry)
 {
-	for (int i = 0; i < 4; ++i)
+	for (int i = 26; i < 30; ++i)
 	{
 		const auto entity = registry.create();
 		registry.emplace<GPIOAnalogueInputComponent>(entity, uint8_t(i));

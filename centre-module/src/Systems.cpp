@@ -65,7 +65,7 @@ void SystemInit(entt::registry &registry)
 
 void SystemInitOnboardDigitalInput(entt::registry &registry)
 {
-	printf("ECS - Digital pins input:\n\n");
+	printf("\n\nECS - Digital pins input:\n\n");
 
 	registry.view<GPIODigitalInputComponent>().each([](auto entity, auto &gpio) {
 		gpio_init(gpio.gpioId);
@@ -83,7 +83,7 @@ void SystemInitOnboardDigitalInput(entt::registry &registry)
 
 void SystemInitOnboardDigitalOutput(entt::registry &registry)
 {
-	printf("ECS - Digital pins out:\n\n");
+	printf("\n\nECS - Digital pins out:\n\n");
 
 	registry.view<GPIODigitalOuputComponent>().each([](auto entity, auto &gpio) {
 		gpio_init(gpio.gpioId);
@@ -96,7 +96,7 @@ void SystemInitOnboardDigitalOutput(entt::registry &registry)
 
 void SystemInitOnboardAnalogueInput(entt::registry &registry)
 {
-	printf("ECS - Analogue pins:\n\n");
+	printf("\n\nECS - Analogue pins:\n\n");
 
 	registry.view<GPIOAnalogueInputComponent>().each([](auto entity, auto &gpio) {
 		adc_gpio_init(gpio.gpioId);

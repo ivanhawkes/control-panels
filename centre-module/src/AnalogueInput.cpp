@@ -19,6 +19,8 @@ void AnalogueInputGroup::Init()
 		// NOTE: This might be entirely wrong for a controller like a thrust stick.
 		analogueInputs[i] = AnalogueInput::midPointADCValue;
 	}
+
+	printf("\n\n");
 }
 
 

@@ -147,7 +147,7 @@ int main(void)
 	g_digitalInputGroup.Init();
 	g_analogueSwitchGroup.Init();
 
-	printf("Initialisation complete.\n");
+	printf("\n\nInitialisation complete.\n");
 
 	// Load up some components so we can test this thing.
 	CreateTestCases(registry);

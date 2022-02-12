@@ -68,7 +68,7 @@ void DigitalInputGroup::Init()
 		switchArray[i].isPressed = false;
 	}
 
-	printf("\n");
+	printf("\n\n");
 }
 
 
