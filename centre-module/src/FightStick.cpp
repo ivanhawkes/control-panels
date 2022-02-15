@@ -36,6 +36,7 @@ void CreateDigitalInput(entt::registry &registry)
 		const auto entity = registry.create();
 		registry.emplace<GPIODigitalInputComponent>(entity, uint8_t(i));
 		registry.emplace<SwitchComponent>(entity, false);
+		registry.emplace<ButtonMaskComponent>(entity, 1U << (i + 3));
 	}
 
 	for (int i = 18; i < 21; ++i)
@@ -43,6 +44,7 @@ void CreateDigitalInput(entt::registry &registry)
 		const auto entity = registry.create();
 		registry.emplace<GPIODigitalInputComponent>(entity, uint8_t(i));
 		registry.emplace<SwitchComponent>(entity, false);
+		registry.emplace<ButtonMaskComponent>(entity, 1U << (i + 3));
 	}
 }
 
@@ -52,6 +54,8 @@ void CreateAnalogueInput(entt::registry &registry)
 	for (int i = 26; i < 30; ++i)
 	{
 		const auto entity = registry.create();
-		registry.emplace<GPIOAnalogueInputComponent>(entity, uint8_t(i));
+		registry.emplace<PicoBoardComponent>(entity);
+		registry.emplace<GPIOAnalogueInputComponent>(entity, static_cast<uint8_t>(i), static_cast<uint>(i - 26));
+		registry.emplace<Analogue16Component>(entity);
 	}
 }

@@ -5,55 +5,9 @@
 #include "hardware/adc.h"
 #include "pico/stdlib.h"
 
-
-void Update(entt::registry &registry, uint32_t startTaskTime, uint32_t deltaTime)
-{
-	SystemUpdateTimers(registry, startTaskTime, deltaTime);
-	SystemUpdateLED(registry);
-
-	// auto view = registry.view<const Delta2Axis16BitComponent, Delta3Axis16BitComponent>();
-
-	// // // use a callback
-	// // view.each([](const auto &pos, auto &vel) { /* ... */ });
-
-	// // // use an extended callback
-	// // view.each([](const auto entity, const auto &pos, auto &vel) { /* ... */ });
-
-	// // use a range-for
-	// for (auto [entity, pos, vel] : view.each())
-	// {
-	// 	// ...
-	// 	printf("posX = %d, velX = %d\n", pos.deltaX, vel.deltaX);
-	// }
-
-	// // use forward iterators and get only the components of interest
-	// for (auto entity : view)
-	// {
-	// 	auto &vel = view.get<Delta3Axis16BitComponent>(entity);
-	// 	printf("dx = %d, dy = %d, dz = %d\n", vel.deltaX, vel.deltaY, vel.deltaZ);
-	// }
-}
-
-
-void SystemUpdateTimers(entt::registry &registry, uint32_t startTaskTime, uint32_t deltaTime)
-{
-	registry.view<TimerUSComponent>().each([deltaTime](auto entity, auto &timer) { timer.elapsedMS += deltaTime; });
-}
-
-
-void SystemUpdateLED(entt::registry &registry)
-{
-	registry.view<GPIODigitalOuputComponent, LEDComponent, TimerUSComponent>().each(
-	    [](auto entity, auto &gpio, auto &led, auto &timer) {
-		    if (timer.elapsedMS > timer.duration)
-		    {
-			    led.isOn = !led.isOn;
-			    timer.elapsedMS = 0U;
-			    gpio_put(gpio.gpioId, led.isOn);
-		    }
-	    });
-}
-
+//
+// INIT
+//
 
 void SystemInit(entt::registry &registry)
 {
@@ -109,6 +63,67 @@ void SystemInitOnboardAnalogueInput(entt::registry &registry)
 	});
 }
 
+//
+// UPDATE
+//
+
+void Update(entt::registry &registry, uint32_t startTaskTime, uint32_t deltaTime)
+{
+	uint32_t valueBitset{0};
+
+	SystemUpdateTimers(registry, startTaskTime, deltaTime);
+	SystemUpdateLED(registry);
+
+	// Read values from the inputs.
+	SystemReadOnboardDigitalInputs(registry, valueBitset);
+	SystemReadOnboardAnalogueInputs(registry);
+
+	// auto view = registry.view<const Delta2Axis16BitComponent, Delta3Axis16BitComponent>();
+
+	// // // use a callback
+	// // view.each([](const auto &pos, auto &vel) { /* ... */ });
+
+	// // // use an extended callback
+	// // view.each([](const auto entity, const auto &pos, auto &vel) { /* ... */ });
+
+	// // use a range-for
+	// for (auto [entity, pos, vel] : view.each())
+	// {
+	// 	// ...
+	// 	printf("posX = %d, velX = %d\n", pos.deltaX, vel.deltaX);
+	// }
+
+	// // use forward iterators and get only the components of interest
+	// for (auto entity : view)
+	// {
+	// 	auto &vel = view.get<Delta3Axis16BitComponent>(entity);
+	// 	printf("dx = %d, dy = %d, dz = %d\n", vel.deltaX, vel.deltaY, vel.deltaZ);
+	// }
+}
+
+
+void SystemUpdateTimers(entt::registry &registry, uint32_t startTaskTime, uint32_t deltaTime)
+{
+	registry.view<TimerUSComponent>().each([deltaTime](auto entity, auto &timer) { timer.elapsedMS += deltaTime; });
+}
+
+
+void SystemUpdateLED(entt::registry &registry)
+{
+	registry.view<GPIODigitalOuputComponent, LEDComponent, TimerUSComponent>().each(
+	    [](auto entity, auto &gpio, auto &led, auto &timer) {
+		    if (timer.elapsedMS > timer.duration)
+		    {
+			    led.isOn = !led.isOn;
+			    timer.elapsedMS = 0U;
+			    gpio_put(gpio.gpioId, led.isOn);
+		    }
+	    });
+}
+
+//
+// READ
+//
 
 void SystemReadOnboardDigitalInputs(entt::registry &registry, uint32_t &valueBitset)
 {
@@ -119,4 +134,53 @@ void SystemReadOnboardDigitalInputs(entt::registry &registry, uint32_t &valueBit
 	// IDEA: Read in one go, use the GPIO pins to re-order it for the Buttons collection output.
 	// Against - .
 	// For - fast.
+}
+
+
+void SystemReadOnboardAnalogueInputs(entt::registry &registry)
+{
+	uint32_t startTaskTime = time_us_32();
+	uint32_t endTaskTime;
+	uint32_t endTaskTime2;
+	uint32_t endTaskTime3;
+	static int count = 0;
+	count++;
+
+	if (count == 20000)
+	{
+		printf("Analogue Raw Value: ");
+	}
+
+	registry.view<PicoBoardComponent, GPIOAnalogueInputComponent, Analogue16Component>().each(
+	    [](auto entity, auto &picoBoard, auto &gpio, auto &value) {
+		    adc_select_input(gpio.adcInputChannel);
+		    value.value = adc_read();
+		    if (count == 20000)
+		    {
+			    printf("%d, ", value.value);
+		    }
+	    });
+
+	endTaskTime = time_us_32();
+
+	registry.view<PicoBoardComponent, GPIOAnalogueInputComponent, Analogue16Component>().each(
+	    [](auto entity, auto &picoBoard, auto &gpio, auto &value) {
+		    // int a{1};
+		    // a++;
+	    });
+
+	endTaskTime2 = time_us_32();
+
+	for (size_t i = 0; i < 4; i++) {}
+
+	endTaskTime3 = time_us_32();
+
+	if (count > 20001)
+	{
+		printf("\n");
+		printf("Analogue Duration ECS = %d\n", endTaskTime - startTaskTime);
+		printf("Analogue Duration2 ECS = %d\n", endTaskTime2 - endTaskTime);
+		printf("Analogue Duration3 ECS = %d\n", endTaskTime3 - endTaskTime2);
+		count = 0;
+	}
 }

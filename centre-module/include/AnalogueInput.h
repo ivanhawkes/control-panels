@@ -41,7 +41,7 @@ class AnalogueInputGroup : IPicoInput
 {
   public:
 	// The number of analogue pins available for use.
-	const static size_t kPinCount{3};
+	const static size_t kPinCount{4};
 
 	// Call to initialise.
 	virtual void Init() override;
@@ -73,5 +73,5 @@ class AnalogueInputGroup : IPicoInput
 	bool hasStateChanged = false;
 
 	// Private store of the raw values from the inputs.
-	AnalogueInput analogueInputs[kPinCount]{{26}, {27}, {29}};
+	AnalogueInput analogueInputs[kPinCount]{{26}, {27}, {28}, {29}};
 };

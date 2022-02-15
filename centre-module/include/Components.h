@@ -36,28 +36,66 @@ Bonus points: be able to update a small OLED display.
 struct GPIODigitalInputComponent
 {
 	// The GPIO pin number which this component represents.
-	uint8_t gpioId;
+	uint8_t gpioId{0};
 };
 
 
 struct GPIODigitalOuputComponent
 {
 	// The GPIO pin number which this component represents.
-	uint8_t gpioId;
+	uint8_t gpioId{0};
 };
 
 
 struct GPIOAnalogueInputComponent
 {
 	// The GPIO pin number which this component represents.
-	uint8_t gpioId;
+	uint8_t gpioId{0};
+
+	// Different to the GPIO pin, this is the channel ID for the SDK. Ranges 0-4 are excepted.
+	// 0-3 is the standard ADC pins. 4 is the temperature sensor.
+	uint adcInputChannel{0};
 };
 
 
 struct GPIOAnalogueOutputComponent
 {
 	// The GPIO pin number which this component represents.
-	uint8_t gpioId;
+	uint8_t gpioId{0};
+};
+
+
+// Flags an entity as affecting the in-built Pico board GPIO.
+struct PicoBoardComponent
+{
+	// HINT: Use with BusIdComponent and DeviceIdComponent components.
+	uint8_t emptyStruct{0};
+};
+
+
+struct I2CComponent
+{
+	// HINT: Use with BusIdComponent and DeviceIdComponent components.
+};
+
+
+struct SPIComponent
+{
+	// HINT: Use with BusIdComponent and DeviceIdComponent components.
+};
+
+
+struct BusIdComponent
+{
+	// The unique bus identifier.
+	uint8_t busId{0};
+};
+
+
+struct DeviceIdComponent
+{
+	// The unique device identifier.
+	uint8_t deviceId{0};
 };
 
 
@@ -68,39 +106,46 @@ struct SwitchComponent
 };
 
 
+struct ButtonMaskComponent
+{
+	// Use to set button bits on for the USB report.
+	uint32_t mask{0};
+};
+
+
 struct Bitset32Component
 {
-	uint32_t state;
+	uint32_t state{0};
 };
 
 
 struct Bitset16Component
 {
-	uint16_t state;
+	uint16_t state{0};
 };
 
 
 struct Bitset8Component
 {
-	uint8_t state;
+	uint8_t state{0};
 };
 
 
 struct Analogue32Component
 {
-	int32_t value;
+	int32_t value{0};
 };
 
 
 struct Analogue16Component
 {
-	int16_t value;
+	int16_t value{0};
 };
 
 
 struct Analogue8Component
 {
-	int8_t value;
+	int8_t value{0};
 };
 
 
@@ -228,39 +273,6 @@ struct FlipFlopComponent
 struct CounterComponent
 {
 	uint32_t value;
-};
-
-
-// Flags an entity as affecting the in-built Pico board GPIO.
-struct PicoBoardComponent
-{
-	// HINT: Use with BusIdComponent and DeviceIdComponent components.
-};
-
-
-struct I2CComponent
-{
-	// HINT: Use with BusIdComponent and DeviceIdComponent components.
-};
-
-
-struct SPIComponent
-{
-	// HINT: Use with BusIdComponent and DeviceIdComponent components.
-};
-
-
-struct BusIdComponent
-{
-	// The unique bus identifier.
-	uint8_t busId;
-};
-
-
-struct DeviceIdComponent
-{
-	// The unique device identifier.
-	uint8_t deviceId;
 };
 
 
