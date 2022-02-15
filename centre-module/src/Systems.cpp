@@ -1,5 +1,7 @@
-#include "Systems.h"
+#include <vector>
+
 #include "Components.h"
+#include "Systems.h"
 
 #include "bsp/board.h"
 #include "hardware/adc.h"
@@ -143,8 +145,10 @@ void SystemReadOnboardAnalogueInputs(entt::registry &registry)
 	uint32_t endTaskTime;
 	uint32_t endTaskTime2;
 	uint32_t endTaskTime3;
+	uint32_t endTaskTime4;
 	static int count = 0;
 	count++;
+	std::vector<GPIOAnalogueInputComponent> gpioCollection{{26, 0}, {27, 1}, {28, 2}, {29, 3}};
 
 	if (count == 20000)
 	{
@@ -171,16 +175,30 @@ void SystemReadOnboardAnalogueInputs(entt::registry &registry)
 
 	endTaskTime2 = time_us_32();
 
-	for (size_t i = 0; i < 4; i++) {}
+	for (auto &gpio : gpioCollection)
+	{
+		adc_select_input(gpio.adcInputChannel);
+		auto value = adc_read();
+		value++;
+	}
 
 	endTaskTime3 = time_us_32();
+
+	for (auto &gpio : gpioCollection)
+	{
+		auto value = gpio.adcInputChannel;
+		value++;
+	}
+
+	endTaskTime4 = time_us_32();
 
 	if (count > 20001)
 	{
 		printf("\n");
-		printf("Analogue Duration ECS = %d\n", endTaskTime - startTaskTime);
-		printf("Analogue Duration2 ECS = %d\n", endTaskTime2 - endTaskTime);
-		printf("Analogue Duration3 ECS = %d\n", endTaskTime3 - endTaskTime2);
+		printf("Duration ECS              = %d\n", endTaskTime - startTaskTime);
+		printf("Duration Empty ECS        = %d\n", endTaskTime2 - endTaskTime);
+		printf("Duration Collection       = %d\n", endTaskTime3 - endTaskTime2);
+		printf("Duration Empty Collection = %d\n", endTaskTime4 - endTaskTime3);
 		count = 0;
 	}
 }

@@ -55,7 +55,7 @@ void CreateAnalogueInput(entt::registry &registry)
 	{
 		const auto entity = registry.create();
 		registry.emplace<PicoBoardComponent>(entity);
-		registry.emplace<GPIOAnalogueInputComponent>(entity, static_cast<uint8_t>(i), static_cast<uint>(i - 26));
+		registry.emplace<GPIOAnalogueInputComponent>(entity, static_cast<uint8_t>(i), static_cast<uint16_t>(i - 26));
 		registry.emplace<Analogue16Component>(entity);
 	}
 }

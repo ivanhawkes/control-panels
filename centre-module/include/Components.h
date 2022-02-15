@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 
+
 /*
 
 Thoughts:
@@ -54,7 +55,7 @@ struct GPIOAnalogueInputComponent
 
 	// Different to the GPIO pin, this is the channel ID for the SDK. Ranges 0-4 are excepted.
 	// 0-3 is the standard ADC pins. 4 is the temperature sensor.
-	uint adcInputChannel{0};
+	uint16_t adcInputChannel{0};
 };
 
 
