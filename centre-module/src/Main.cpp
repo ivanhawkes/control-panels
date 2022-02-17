@@ -24,6 +24,7 @@
 
 static DigitalInputGroup g_digitalInputGroup;
 static AnalogueInputGroup g_analogueSwitchGroup;
+uint32_t g_digitalSwitches;
 
 
 void SendGamepadHIDReport(uint8_t report_id)
@@ -53,20 +54,29 @@ void SendGamepadHIDReport(uint8_t report_id)
 	if (g_digitalInputGroup.HasStateChanged() || g_analogueSwitchGroup.HasStateChanged())
 	{
 		// Normal report.
-		uint8_t state = g_digitalInputGroup.GetState() & 0x0F;
-		switch (state & 0x0F)
+		// uint8_t state = g_digitalInputGroup.GetState() & 0x0F;
+		uint8_t state = g_digitalSwitches & 0x0F;
+		switch (state)
 		{
+			// TODO: Joystick wiring doesn't match the way the GAMEPAD_MASK_* expects it to be. Need to swap
+			// up and down. Already swapped left and right. This would make it incompatible with the way
+			// PFB does it, I think. Maybe should add my own masks...might not matter since this can be
+			// refactored long term.
 			case 1:
-				report.hat = 1;
+				// Down.
+				report.hat = GAMEPAD_HAT_DOWN;
 				break;
 			case 2:
-				report.hat = 3;
+				// Up
+				report.hat = GAMEPAD_HAT_UP;
 				break;
 			case 4:
-				report.hat = 5;
+				// Left
+				report.hat = GAMEPAD_HAT_LEFT;
 				break;
 			case 8:
-				report.hat = 7;
+				// Right
+				report.hat = GAMEPAD_HAT_RIGHT;
 				break;
 
 				// case GAMEPAD_MASK_UP | GAMEPAD_MASK_LEFT: report.hat = HID_HAT_UPLEFT; break;
@@ -79,8 +89,7 @@ void SendGamepadHIDReport(uint8_t report_id)
 				break;
 		}
 
-		// HACK: TEST: Send raw bits out.
-		report.hat = state;
+		printf("hat = %d\n", report.hat);
 
 		// Digital buttons.
 		report.buttons = g_digitalInputGroup.GetState();
@@ -169,7 +178,7 @@ int main(void)
 		tud_task();
 
 		// Test the ECS.
-		Update(registry, startTaskTime, deltaTime);
+		Update(registry, startTaskTime, deltaTime, g_digitalSwitches);
 
 		// Check all our switches.
 		if (g_digitalInputGroup.OnTask()) {}

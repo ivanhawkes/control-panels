@@ -16,7 +16,7 @@ void SystemInitOnboardAnalogueInput(entt::registry &registry);
 
 // Update.
 
-void Update(entt::registry &registry, uint32_t startTaskTime, uint32_t deltaTime);
+void Update(entt::registry &registry, uint32_t startTaskTime, uint32_t deltaTime, uint32_t &digitalSwitches);
 
 void SystemUpdateTimers(entt::registry &registry, uint32_t startTaskTime, uint32_t deltaTime);
 

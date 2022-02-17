@@ -81,19 +81,14 @@ void SystemInitOnboardAnalogueInput(entt::registry &registry)
 // UPDATE
 //
 
-void Update(entt::registry &registry, uint32_t startTaskTime, uint32_t deltaTime)
+void Update(entt::registry &registry, uint32_t startTaskTime, uint32_t deltaTime, uint32_t &digitalSwitches)
 {
-	uint32_t digitalSwitches;
-
 	SystemUpdateTimers(registry, startTaskTime, deltaTime);
 	SystemUpdateLED(registry);
 
 	// Read values from the inputs.
 	digitalSwitches = SystemReadOnboardDigitalInputs(registry);
 	SystemReadOnboardAnalogueInputs(registry);
-
-	// HACK: remove this later - using it to suppress a warning.
-	digitalSwitches++;
 
 	// auto view = registry.view<const Delta2Axis16BitComponent, Delta3Axis16BitComponent>();
 
@@ -177,22 +172,21 @@ uint32_t SystemReadOnboardDigitalInputs(entt::registry &registry)
 			    // The state has changed for this frame.
 			    hasStateChanged = true;
 
-			    // Switch went on or off?
+			    // DEBUG: Let us know if the switch changed states.
 			    if (currentSwitchState)
-			    {
-				    digitalSwitches |= buttonMask.mask;
 				    printf("+%u\n", buttonMask.mask);
-			    }
 			    else
-			    {
-				    digitalSwitches &= ~buttonMask.mask;
 				    printf("-%u\n", buttonMask.mask);
-			    }
 
 			    // Entering a new state, reset the time now.
 			    timestamp.timestamp = currentTime;
 			    switchComponent.isPressed = currentSwitchState;
 		    }
+
+		    // If the switch is on, we should add it to the button state. The state is zeroed out each
+		    // loop, so no need to handle off cases.
+		    if (currentSwitchState)
+			    digitalSwitches |= buttonMask.mask;
 	    });
 
 	return digitalSwitches;
