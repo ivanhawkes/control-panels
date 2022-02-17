@@ -20,7 +20,7 @@ void Update(entt::registry &registry, uint32_t startTaskTime, uint32_t deltaTime
 
 void SystemUpdateTimers(entt::registry &registry, uint32_t startTaskTime, uint32_t deltaTime);
 
-void SystemReadOnboardDigitalInputs(entt::registry &registry, uint32_t &valueBitset);
+uint32_t SystemReadOnboardDigitalInputs(entt::registry &registry);
 
 void SystemReadOnboardAnalogueInputs(entt::registry &registry);
 

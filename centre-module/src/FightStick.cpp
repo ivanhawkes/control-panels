@@ -31,21 +31,28 @@ void CreateFlashingLED(entt::registry &registry)
 
 void CreateDigitalInput(entt::registry &registry)
 {
-	for (int i = 0; i < 16; ++i)
+	for (int i = 0; i < 12; ++i)
 	{
 		const auto entity = registry.create();
+		registry.emplace<PicoBoardComponent>(entity);
 		registry.emplace<GPIODigitalInputComponent>(entity, uint8_t(i));
 		registry.emplace<SwitchComponent>(entity, false);
-		registry.emplace<ButtonMaskComponent>(entity, 1U << (i + 3));
+		registry.emplace<ButtonMaskComponent>(entity, 1U << i);
+		registry.emplace<TimestampUS32Component>(entity, 0U);
 	}
 
-	for (int i = 18; i < 21; ++i)
-	{
-		const auto entity = registry.create();
-		registry.emplace<GPIODigitalInputComponent>(entity, uint8_t(i));
-		registry.emplace<SwitchComponent>(entity, false);
-		registry.emplace<ButtonMaskComponent>(entity, 1U << (i + 3));
-	}
+	// for (int i = 18; i < 21; ++i)
+	// {
+	// 	const auto entity = registry.create();
+	// 	registry.emplace<PicoBoardComponent>(entity);
+	// 	registry.emplace<GPIODigitalInputComponent>(entity, uint8_t(i));
+	// 	registry.emplace<SwitchComponent>(entity, false);
+	// 	registry.emplace<ButtonMaskComponent>(entity, 1U << i);
+	// 	registry.emplace<TimestampUS32Component>(entity, 0U);
+	// }
+
+	// TODO: Make some switches that report key presses.
+	// Use KeyComponent, KeyModifierComponent
 }
 
 

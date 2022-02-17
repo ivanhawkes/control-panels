@@ -181,7 +181,7 @@ struct KeyComponent
 struct KeyModifierComponent
 {
 	// Modifiers that are being pressed at the same time as a key stroke e.g. CTRL.
-	uint8_t modifier;
+	uint8_t modifier{0};
 };
 
 
@@ -190,75 +190,89 @@ struct MouseComponent
 {
 	// Using AC Pan - what the hell is that?
 	// TODO: Remove if not needed.
-	int8_t pan;
+	int8_t pan{0};
 };
 
 
 struct Delta1Axis8BitComponent
 {
-	int8_t delta;
+	int8_t delta{0};
 };
 
 
 struct Delta2Axis8BitComponent
 {
 	// X-axis.
-	int8_t deltaX;
+	int8_t deltaX{0};
 
 	// Y-axis.
-	int8_t deltaY;
+	int8_t deltaY{0};
 };
 
 
 struct Delta3Axis8BitComponent
 {
 	// X-axis.
-	int8_t deltaX;
+	int8_t deltaX{0};
 
 	// Y-axis.
-	int8_t deltaY;
+	int8_t deltaY{0};
 
 	// Z-axis.
-	int8_t deltaZ;
+	int8_t deltaZ{0};
 };
 
 
 struct Delta1Axis16BitComponent
 {
-	int16_t delta;
+	int16_t delta{0};
 };
 
 
 struct Delta2Axis16BitComponent
 {
 	// X-axis.
-	int16_t deltaX;
+	int16_t deltaX{0};
 
 	// Y-axis.
-	int16_t deltaY;
+	int16_t deltaY{0};
 };
 
 
 struct Delta3Axis16BitComponent
 {
 	// X-axis.
-	int16_t deltaX;
+	int16_t deltaX{0};
 
 	// Y-axis.
-	int16_t deltaY;
+	int16_t deltaY{0};
 
 	// Z-axis.
-	int16_t deltaZ;
+	int16_t deltaZ{0};
 };
 
 
 struct TimerUSComponent
 {
 	// The duration that must pass before the timer is activated.
-	uint32_t duration;
+	uint32_t duration{0};
 
 	// The number of microseconds that have passed since the timer was started.
-	uint32_t elapsedMS;
+	uint32_t elapsedMS{0};
+};
+
+
+struct TimestampUS32Component
+{
+	// The timestamp in microseconds.
+	uint32_t timestamp{0};
+};
+
+
+struct TimestampUS64Component
+{
+	// The full timestamp in microseconds.
+	uint64_t timestamp{0};
 };
 
 

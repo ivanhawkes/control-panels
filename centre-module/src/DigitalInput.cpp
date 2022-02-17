@@ -101,12 +101,12 @@ bool DigitalInputGroup::OnTask()
 			if (currentSwitchState)
 			{
 				digitalSwitches &= ~switchArray[i].mappedKey;
-				printf("-%s  CT: %u\n", switchArray[i].mappedKeyName.c_str(), currentTime);
+				// printf("-%s  CT: %u\n", switchArray[i].mappedKeyName.c_str(), currentTime);
 			}
 			else
 			{
 				digitalSwitches |= switchArray[i].mappedKey;
-				printf("+%s CT: %u\n", switchArray[i].mappedKeyName.c_str(), currentTime);
+				// printf("+%s CT: %u\n", switchArray[i].mappedKeyName.c_str(), currentTime);
 			}
 
 			// Entering a new state, reset the time now.

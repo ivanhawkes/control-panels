@@ -7,6 +7,18 @@
 #include "hardware/adc.h"
 #include "pico/stdlib.h"
 
+
+// NOTE: Need this to be somewhere generic. It can only be used on ranges of less than
+// 1 hour 11 mins since it wraps around.
+uint32_t GetTimeDifference(uint32_t start, uint32_t end)
+{
+	if (start < end)
+		return end - start;
+	else
+		return std::numeric_limits<uint32_t>::max() - (start - end);
+}
+
+
 //
 // INIT
 //
@@ -71,14 +83,17 @@ void SystemInitOnboardAnalogueInput(entt::registry &registry)
 
 void Update(entt::registry &registry, uint32_t startTaskTime, uint32_t deltaTime)
 {
-	uint32_t valueBitset{0};
+	uint32_t digitalSwitches;
 
 	SystemUpdateTimers(registry, startTaskTime, deltaTime);
 	SystemUpdateLED(registry);
 
 	// Read values from the inputs.
-	SystemReadOnboardDigitalInputs(registry, valueBitset);
+	digitalSwitches = SystemReadOnboardDigitalInputs(registry);
 	SystemReadOnboardAnalogueInputs(registry);
+
+	// HACK: remove this later - using it to suppress a warning.
+	digitalSwitches++;
 
 	// auto view = registry.view<const Delta2Axis16BitComponent, Delta3Axis16BitComponent>();
 
@@ -127,32 +142,73 @@ void SystemUpdateLED(entt::registry &registry)
 // READ
 //
 
-void SystemReadOnboardDigitalInputs(entt::registry &registry, uint32_t &valueBitset)
+uint32_t SystemReadOnboardDigitalInputs(entt::registry &registry)
 {
-	// Should I read all the onboard in one call?
-	// How should this be passed out? Does this even make sense doing one at a time, or all at once?
-	// Some might be set to output, what happens then?
+	// Default is for nothing to happen.
+	bool hasStateChanged{false};
 
-	// IDEA: Read in one go, use the GPIO pins to re-order it for the Buttons collection output.
-	// Against - .
-	// For - fast.
+	// A bitmap of the state of all the digital switches on a gamepad.
+	uint32_t digitalSwitches{0};
+
+	uint32_t currentTime = time_us_32();
+
+	// Get all the GPIO values at once. We flip them now since we're using pull ups, so
+	// a zero voltage is actually a button pressed down.
+	uint32_t gpioAll = ~gpio_get_all();
+
+	// Mask out the ones we don't want e.g. 0 and 1 for UART, anything above 22.
+	// gpioAll &= 0x00FFFFFF;
+	gpioAll &= 0x00000FFF;
+
+	registry
+	    .view<
+	        PicoBoardComponent, GPIODigitalInputComponent, SwitchComponent, ButtonMaskComponent,
+	        TimestampUS32Component>()
+	    .each([&gpioAll, &digitalSwitches, &hasStateChanged, currentTime](
+	              auto entity, auto &picoBoard, auto &gpio, auto &switchComponent, auto &buttonMask, auto &timestamp) {
+		    // Get their pressed state.
+		    const bool currentSwitchState = gpioAll & buttonMask.mask;
+
+		    const bool bouncePeriod = (GetTimeDifference(timestamp.timestamp, currentTime) < 4000U);
+
+		    // State change - make something happen.
+		    if ((switchComponent.isPressed != currentSwitchState) && (!bouncePeriod))
+		    {
+			    // The state has changed for this frame.
+			    hasStateChanged = true;
+
+			    // Switch went on or off?
+			    if (currentSwitchState)
+			    {
+				    digitalSwitches |= buttonMask.mask;
+				    printf("+%u\n", buttonMask.mask);
+			    }
+			    else
+			    {
+				    digitalSwitches &= ~buttonMask.mask;
+				    printf("-%u\n", buttonMask.mask);
+			    }
+
+			    // Entering a new state, reset the time now.
+			    timestamp.timestamp = currentTime;
+			    switchComponent.isPressed = currentSwitchState;
+		    }
+	    });
+
+	return digitalSwitches;
 }
 
 
 void SystemReadOnboardAnalogueInputs(entt::registry &registry)
 {
-	uint32_t startTaskTime = time_us_32();
-	uint32_t endTaskTime;
-	uint32_t endTaskTime2;
-	uint32_t endTaskTime3;
-	uint32_t endTaskTime4;
-	static int count = 0;
+	// uint32_t startTaskTime = time_us_32();
+	// uint32_t endTaskTime;
+	static int count{0};
 	count++;
-	std::vector<GPIOAnalogueInputComponent> gpioCollection{{26, 0}, {27, 1}, {28, 2}, {29, 3}};
 
 	if (count == 20000)
 	{
-		printf("Analogue Raw Value: ");
+		// printf("Analogue Raw Value: ");
 	}
 
 	registry.view<PicoBoardComponent, GPIOAnalogueInputComponent, Analogue16Component>().each(
@@ -161,44 +217,16 @@ void SystemReadOnboardAnalogueInputs(entt::registry &registry)
 		    value.value = adc_read();
 		    if (count == 20000)
 		    {
-			    printf("%d, ", value.value);
+			    // printf("%d, ", value.value);
 		    }
 	    });
 
-	endTaskTime = time_us_32();
-
-	registry.view<PicoBoardComponent, GPIOAnalogueInputComponent, Analogue16Component>().each(
-	    [](auto entity, auto &picoBoard, auto &gpio, auto &value) {
-		    // int a{1};
-		    // a++;
-	    });
-
-	endTaskTime2 = time_us_32();
-
-	for (auto &gpio : gpioCollection)
-	{
-		adc_select_input(gpio.adcInputChannel);
-		auto value = adc_read();
-		value++;
-	}
-
-	endTaskTime3 = time_us_32();
-
-	for (auto &gpio : gpioCollection)
-	{
-		auto value = gpio.adcInputChannel;
-		value++;
-	}
-
-	endTaskTime4 = time_us_32();
+	// endTaskTime = time_us_32();
 
 	if (count > 20001)
 	{
-		printf("\n");
-		printf("Duration ECS              = %d\n", endTaskTime - startTaskTime);
-		printf("Duration Empty ECS        = %d\n", endTaskTime2 - endTaskTime);
-		printf("Duration Collection       = %d\n", endTaskTime3 - endTaskTime2);
-		printf("Duration Empty Collection = %d\n", endTaskTime4 - endTaskTime3);
+		// printf("\n");
+		// printf("Duration ECS: %d\n", endTaskTime - startTaskTime);
 		count = 0;
 	}
 }
