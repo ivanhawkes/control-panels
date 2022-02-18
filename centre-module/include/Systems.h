@@ -16,11 +16,14 @@ void SystemInitOnboardAnalogueInput(entt::registry &registry);
 
 // Update.
 
-void Update(entt::registry &registry, uint32_t startTaskTime, uint32_t deltaTime, uint32_t &digitalSwitches);
+void Update(
+    entt::registry &registry, uint32_t startTaskTime, uint32_t deltaTime, bool &hasStateChanged,
+    uint32_t &digitalSwitches, uint32_t &dpadBitset);
 
 void SystemUpdateTimers(entt::registry &registry, uint32_t startTaskTime, uint32_t deltaTime);
 
-uint32_t SystemReadOnboardDigitalInputs(entt::registry &registry);
+void SystemReadOnboardDigitalInputs(
+    entt::registry &registry, bool &hasStateChanged, uint32_t &digitalSwitchBitset, uint32_t &dpadBitset);
 
 void SystemReadOnboardAnalogueInputs(entt::registry &registry);
 

@@ -8,6 +8,7 @@
 #include "TinyUSBDescriptors.h"
 #include "tusb.h"
 
+#include "GamepadState.h"
 #include "bsp/board.h"
 #include "hardware/adc.h"
 #include "pico/stdlib.h"
@@ -24,58 +25,55 @@
 
 static DigitalInputGroup g_digitalInputGroup;
 static AnalogueInputGroup g_analogueSwitchGroup;
-uint32_t g_digitalSwitches;
+uint32_t g_digitalSwitchBitset;
+uint32_t g_dpadBitset;
+bool g_hasStateChanged{false};
 
 
 void SendGamepadHIDReport(uint8_t report_id)
 {
-	// skip if hid is not ready yet
-	if (!tud_hid_ready())
+	if (g_hasStateChanged)
 	{
+		// Skip if hid is not ready yet.
 		// TODO: Is this a way we can use to find out the right timing?
-		// NOTE: Code might run fast enough to not even be bothered, maybe.
-		// printf("HID not ready.\n");
-		return;
-	}
+		// NOTE: This will never be ready if the USB device craps out, which it does a lot.
+		// unplug and replug the device to reset it or you'll be working with stale binaries.
+		if (!tud_hid_ready())
+		{
+			// printf("HID not ready.\n");
+			return;
+		}
 
-	// use to avoid send multiple consecutive zero report for keyboard
-	// static bool hasGamepadKey = false;
+		hid_gamepad_report_t report = {
+		    .x = static_cast<int8_t>(g_analogueSwitchGroup.GetXBox(0)),
+		    .y = static_cast<int8_t>(g_analogueSwitchGroup.GetXBox(1)),
+		    .z = 0,
+		    .rz = 0,
+		    .rx = 0,
+		    .ry = 0,
+		    .hat = 0,
+		    .buttons = 0};
 
-	hid_gamepad_report_t report = {
-	    .x = static_cast<int8_t>(g_analogueSwitchGroup.GetXBox(0)),
-	    .y = static_cast<int8_t>(g_analogueSwitchGroup.GetXBox(1)),
-	    .z = 0,
-	    .rz = 0,
-	    .rx = 0,
-	    .ry = 0,
-	    .hat = 0,
-	    .buttons = 0};
+		// Digital buttons.
+		report.buttons = g_digitalSwitchBitset;
 
-	if (g_digitalInputGroup.HasStateChanged() || g_analogueSwitchGroup.HasStateChanged())
-	{
-		// Normal report.
-		// uint8_t state = g_digitalInputGroup.GetState() & 0x0F;
-		uint8_t state = g_digitalSwitches & 0x0F;
-		switch (state)
+		// Hat / Dpad.
+		switch (g_dpadBitset & 0x0F)
 		{
 			// TODO: Joystick wiring doesn't match the way the GAMEPAD_MASK_* expects it to be. Need to swap
 			// up and down. Already swapped left and right. This would make it incompatible with the way
 			// PFB does it, I think. Maybe should add my own masks...might not matter since this can be
 			// refactored long term.
-			case 1:
-				// Down.
-				report.hat = GAMEPAD_HAT_DOWN;
-				break;
-			case 2:
-				// Up
+			case GAMEPAD_MASK_UP:
 				report.hat = GAMEPAD_HAT_UP;
 				break;
-			case 4:
-				// Left
+			case GAMEPAD_MASK_DOWN:
+				report.hat = GAMEPAD_HAT_DOWN;
+				break;
+			case GAMEPAD_MASK_LEFT:
 				report.hat = GAMEPAD_HAT_LEFT;
 				break;
-			case 8:
-				// Right
+			case GAMEPAD_MASK_RIGHT:
 				report.hat = GAMEPAD_HAT_RIGHT;
 				break;
 
@@ -89,26 +87,11 @@ void SendGamepadHIDReport(uint8_t report_id)
 				break;
 		}
 
-		printf("hat = %d\n", report.hat);
-
-		// Digital buttons.
-		report.buttons = g_digitalInputGroup.GetState();
-
 		// NOTE: ILH: WTF? Is this the wrong report for this information? Look into it.
 		tud_hid_report(REPORT_ID_GAMEPAD, &report, sizeof(report));
 
-		// hasGamepadKey = true;
-	}
-	else
-	{
-		// // Empty report.
-		// report.hat = g_digitalInputGroup.GetState() & 0x0F;
-		// report.buttons = g_digitalInputGroup.GetState();
-
-		// if (hasGamepadKey)
-		// 	tud_hid_report(REPORT_ID_GAMEPAD, &report, sizeof(report));
-
-		// hasGamepadKey = false;
+		// Our reported state should now be up to date with our present state.
+		g_hasStateChanged = false;
 	}
 }
 
@@ -178,7 +161,7 @@ int main(void)
 		tud_task();
 
 		// Test the ECS.
-		Update(registry, startTaskTime, deltaTime, g_digitalSwitches);
+		Update(registry, startTaskTime, deltaTime, g_hasStateChanged, g_digitalSwitchBitset, g_dpadBitset);
 
 		// Check all our switches.
 		if (g_digitalInputGroup.OnTask()) {}

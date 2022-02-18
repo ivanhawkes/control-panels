@@ -81,13 +81,15 @@ void SystemInitOnboardAnalogueInput(entt::registry &registry)
 // UPDATE
 //
 
-void Update(entt::registry &registry, uint32_t startTaskTime, uint32_t deltaTime, uint32_t &digitalSwitches)
+void Update(
+    entt::registry &registry, uint32_t startTaskTime, uint32_t deltaTime, bool &hasStateChanged,
+    uint32_t &digitalSwitches, uint32_t &dpadBitset)
 {
 	SystemUpdateTimers(registry, startTaskTime, deltaTime);
 	SystemUpdateLED(registry);
 
 	// Read values from the inputs.
-	digitalSwitches = SystemReadOnboardDigitalInputs(registry);
+	SystemReadOnboardDigitalInputs(registry, hasStateChanged, digitalSwitches, dpadBitset);
 	SystemReadOnboardAnalogueInputs(registry);
 
 	// auto view = registry.view<const Delta2Axis16BitComponent, Delta3Axis16BitComponent>();
@@ -137,13 +139,12 @@ void SystemUpdateLED(entt::registry &registry)
 // READ
 //
 
-uint32_t SystemReadOnboardDigitalInputs(entt::registry &registry)
+void SystemReadOnboardDigitalInputs(
+    entt::registry &registry, bool &hasStateChanged, uint32_t &digitalSwitchBitset, uint32_t &dpadBitset)
 {
-	// Default is for nothing to happen.
-	bool hasStateChanged{false};
-
-	// A bitmap of the state of all the digital switches on a gamepad.
-	uint32_t digitalSwitches{0};
+	// Zero out. We'll add in masks as needed.
+	digitalSwitchBitset = 0U;
+	dpadBitset = 0U;
 
 	uint32_t currentTime = time_us_32();
 
@@ -157,13 +158,14 @@ uint32_t SystemReadOnboardDigitalInputs(entt::registry &registry)
 
 	registry
 	    .view<
-	        PicoBoardComponent, GPIODigitalInputComponent, SwitchComponent, ButtonMaskComponent,
+	        PicoBoardComponent, GPIODigitalInputComponent, SwitchComponent, ButtonMaskComponent, DPadMaskComponent,
 	        TimestampUS32Component>()
-	    .each([&gpioAll, &digitalSwitches, &hasStateChanged, currentTime](
-	              auto entity, auto &picoBoard, auto &gpio, auto &switchComponent, auto &buttonMask, auto &timestamp) {
-		    // Get their pressed state.
-		    const bool currentSwitchState = gpioAll & buttonMask.mask;
+	    .each([&gpioAll, &digitalSwitchBitset, &dpadBitset, &hasStateChanged, currentTime](
+	              auto entity, auto &picoBoard, auto &gpio, auto &switchComponent, auto &buttonMask, auto &dpadMask,
+	              auto &timestamp) {
+		    const bool currentSwitchState = gpioAll & (1U << gpio.gpioId);
 
+		    // See if we're still in the debounce period.
 		    const bool bouncePeriod = (GetTimeDifference(timestamp.timestamp, currentTime) < 4000U);
 
 		    // State change - make something happen.
@@ -173,10 +175,16 @@ uint32_t SystemReadOnboardDigitalInputs(entt::registry &registry)
 			    hasStateChanged = true;
 
 			    // DEBUG: Let us know if the switch changed states.
-			    if (currentSwitchState)
-				    printf("+%u\n", buttonMask.mask);
+			    uint32_t theMask;
+			    if (buttonMask.mask != 0U)
+				    theMask = buttonMask.mask;
 			    else
-				    printf("-%u\n", buttonMask.mask);
+				    theMask = dpadMask.mask;
+
+			    if (currentSwitchState)
+				    printf("+%u\n", theMask);
+			    else
+				    printf("-%u\n", theMask);
 
 			    // Entering a new state, reset the time now.
 			    timestamp.timestamp = currentTime;
@@ -186,10 +194,11 @@ uint32_t SystemReadOnboardDigitalInputs(entt::registry &registry)
 		    // If the switch is on, we should add it to the button state. The state is zeroed out each
 		    // loop, so no need to handle off cases.
 		    if (currentSwitchState)
-			    digitalSwitches |= buttonMask.mask;
+		    {
+			    digitalSwitchBitset |= buttonMask.mask;
+			    dpadBitset |= dpadMask.mask;
+		    }
 	    });
-
-	return digitalSwitches;
 }
 
 

@@ -114,6 +114,13 @@ struct ButtonMaskComponent
 };
 
 
+struct DPadMaskComponent
+{
+	// Use to set DPad bits on for the USB report.
+	uint32_t mask{0};
+};
+
+
 struct Bitset32Component
 {
 	uint32_t state{0};
