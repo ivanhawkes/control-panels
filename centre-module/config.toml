@@ -1,0 +1,15 @@
+# This is a TOML document
+
+title = "Configuration for Centre Module"
+
+[general]
+debounce_period = 3000
+
+[uart]
+baud = 115200
+tx = 16
+rx = 17
+
+[blink]
+connected = 1000
+disconnected = 200

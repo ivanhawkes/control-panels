@@ -1,0 +1,47 @@
+# This is a TOML document
+
+title = "Entity Component System (ECS) for Centre Module"
+
+[[entity]]
+name="Fireball"
+entityId = 0
+
+[[entity]]
+name="Hellfire"
+entityId = 1
+
+[[entity]]
+name="Life Steal"
+entityId = 2
+
+[[component]]
+entityId=0
+name="Fireball"
+displayName="Fireball"
+
+[[component]]
+entityId=0
+targetTargetType="target"
+quantity=14
+damageType="fire"
+
+[[component]]
+entityId=0
+targetTargetType="source"
+quantity=7
+
+[[component]]
+entityId=1
+name="Hellfire"
+displayName="Hellfire"
+
+[[component]]
+entityId=1
+targetTargetType="target"
+quantity=14
+damageType="fire"
+
+[[component]]
+entityId=2
+name="Life Steal"
+displayName="Life Steal"
