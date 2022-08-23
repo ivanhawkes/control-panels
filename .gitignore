@@ -1,5 +1,20 @@
-# Never welcome.
+# Don't save an logs.
 *.log
 
+# Keep Visual Studio from poluting the code.
 /.vs
+
+# Build files
 /build
+CMakeFiles/
+cmake_install.cmake
+_deps/
+centre-module/Makefile
+
+# ELF dependancies.
+elf2uf2/
+*.elf.map
+
+# External source can be brought in via other means.
+src/external/
+CMakeLists.txt

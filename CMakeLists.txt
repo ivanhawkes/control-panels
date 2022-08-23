@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.14)
 
-# Pull in SDK (must be before project)
-include(pico_sdk_import.cmake)
+# Initialize the SDK directly.
+# NOTE: I am doing it this way because the standard include using the environmental path
+# simply fails to successfully find the path.
+include(/home/ivan/development/pico/pico-sdk/pico_sdk_init.cmake)
 
 project(control_panels C CXX ASM)
 set(CMAKE_C_STANDARD 11)
@@ -53,3 +55,17 @@ add_subdirectory("${EXTERNAL_PATH}")
 if(NOT EXISTS "${EXTERNAL_PATH}/MPG/CMakeLists.txt")
     message(FATAL_ERROR "The submodules were not downloaded! GIT_SUBMODULE was turned off or failed. Please update submodules and try again.")
 endif()
+
+# # Add TOML++ as a dependancy.
+# include(FetchContent)
+# FetchContent_Declare(
+#     tomlplusplus
+#     GIT_REPOSITORY https://github.com/marzer/tomlplusplus.git
+#     GIT_TAG        v3.1.0
+# )
+# FetchContent_MakeAvailable(tomlplusplus)
+
+# target_include_directories(centre_module PUBLIC ${tomlplusplus_SOURCE_DIR}/include/toml++)
+
+# Add an include directive for the header files.
+target_include_directories(centre_module PUBLIC ${CMAKE_CURRENT_LIST_DIR}/MPG/src)
