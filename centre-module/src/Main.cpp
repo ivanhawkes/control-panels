@@ -22,7 +22,7 @@
 #include "Components.h"
 #include "Systems.h"
 
-//#include <toml.h>
+#include <toml.hpp>
 
 
 static DigitalInputGroup g_digitalInputGroup;
@@ -136,6 +136,15 @@ int main(void)
 	stdio_uart_init_full(uart0, 115200, 16, 17);
 
 	printf("Centre console online.\n\n");
+
+	// Parse a TOML file with all our components in it.
+	auto config = toml::parse_file("component.toml");
+
+	// get key-value pairs
+	std::string_view library_name = config["library"]["name"].value_or("");
+	printf("\nLibrary Name from TOML = %s.\n", library_name.data());
+	// std::string_view library_author = config["library"]["authors"][0].value_or(""sv);
+	// int64_t depends_on_cpp_version = config["dependencies"]["cpp"].value_or(0);
 
 	// Init our input handlers.
 	g_digitalInputGroup.Init();

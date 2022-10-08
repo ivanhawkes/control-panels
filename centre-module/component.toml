@@ -2,6 +2,13 @@
 
 title = "Entity Component System (ECS) for Centre Module"
 
+[library]
+name = "toml++"
+authors = ["Mark Gillard <mark.gillard@outlook.com.au>"]
+
+[dependencies]
+cpp = 17
+
 [[entity]]
 name="Fireball"
 entityId = 0

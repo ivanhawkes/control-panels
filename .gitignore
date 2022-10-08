@@ -3,6 +3,7 @@
 
 # Keep Visual Studio from poluting the code.
 /.vs
+.vscode/
 
 # Build files
 /build
