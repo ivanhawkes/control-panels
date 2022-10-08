@@ -51,10 +51,10 @@ add_subdirectory(centre-module)
 # Add any external dependancies.
 add_subdirectory("${EXTERNAL_PATH}")
 
-# Safety check - just check one of the submodules we know should be there now.
-if(NOT EXISTS "${EXTERNAL_PATH}/MPG/CMakeLists.txt")
-    message(FATAL_ERROR "The submodules were not downloaded! GIT_SUBMODULE was turned off or failed. Please update submodules and try again.")
-endif()
+# # Safety check - just check one of the submodules we know should be there now.
+# if(NOT EXISTS "${EXTERNAL_PATH}/MPG/CMakeLists.txt")
+#     message(FATAL_ERROR "The submodules were not downloaded! GIT_SUBMODULE was turned off or failed. Please update submodules and try again.")
+# endif()
 
 # # Add TOML++ as a dependancy.
 # include(FetchContent)

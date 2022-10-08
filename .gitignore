@@ -16,5 +16,5 @@ elf2uf2/
 *.elf.map
 
 # External source can be brought in via other means.
-src/external/
+#src/external/
 CMakeLists.txt
